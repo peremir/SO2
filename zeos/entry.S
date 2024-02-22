@@ -51,3 +51,27 @@
       movl %edx, %ds;           \
       movl %edx, %es
 
+#define RESTORE_ALL \
+      popl %edx; \
+      popl %ecx; \
+      popl %ebx; \
+      popl %esi; \
+      popl %edi; \
+      popl %ebp; \
+      popl %eax; \
+      popl %ds; \
+      popl %es; \
+      popl %fs; \
+      popl %gs
+
+#define EOI \
+      movb $0x20, %al; \
+      outb %al, $0x20; \
+
+ENTRY (hank)
+	SAVE_ALL
+	EOI
+	call printEntry
+	RESTORE_ALL
+	IRET
+

@@ -12,6 +12,8 @@
 Gate idt[IDT_ENTRIES];
 Register    idtR;
 
+void hank();
+
 char char_map[] =
 {
   '\0','\0','1','2','3','4','5','6',
@@ -83,6 +85,7 @@ void setIdt()
   set_handlers();
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
+  setInterruptHandler(33, hank, 0);
 
   set_idt_reg(&idtR);
 }
