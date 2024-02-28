@@ -15,6 +15,8 @@
 
 Byte x, y=19;
 
+
+
 /* Read a byte from 'port' */
 Byte inb (unsigned short port)
 {
@@ -24,6 +26,21 @@ Byte inb (unsigned short port)
   return v;
 }
 
+//
+void scroll()
+{
+  Word *screen = (Word *)0xb8000;
+  for (int i = 0; i < (NUM_ROWS - 1) * NUM_COLUMNS; i++) // loop through the screen content except the last row
+  {
+    screen[i] = screen[i + NUM_COLUMNS]; // copy the content of the next row to the current row
+  }
+  for (int i = (NUM_ROWS - 1) * NUM_COLUMNS; i < NUM_ROWS * NUM_COLUMNS; i++) // loop through the last row
+  {
+    screen[i] = 0x0200; // clear the content of the last row
+  }
+}
+
+//OPTIONAL Modified printc function to scroll text when reaches bottom of screen
 void printc(char c)
 {
      __asm__ __volatile__ ( "movb %0, %%al; outb $0xe9" ::"a"(c)); /* Magic BOCHS debug: writes 'c' to port 0xe9 */
@@ -31,6 +48,12 @@ void printc(char c)
   {
     x = 0;
     y=(y+1)%NUM_ROWS;
+
+    if (y >= NUM_ROWS-1) // if the cursor reaches the last row
+    {
+      scroll(); // call the scroll function to move the screen content up by one row
+      y--; // adjust the cursor position
+    }
   }
   else
   {
@@ -41,11 +64,17 @@ void printc(char c)
     {
       x = 0;
       y=(y+1)%NUM_ROWS;
+
+      if (y >= NUM_ROWS-1) // if the cursor reaches the last row
+      {
+        scroll(); // call the scroll function to move the screen content up by one row
+        y--; // adjust the cursor position
+      }
     }
   }
 }
 
-//Modified printc color to print foreground in a different color
+//OPTIONAL Modified printc color to print foreground in a different color
 void printc_color(char c)
 {
      __asm__ __volatile__ ( "movb %0, %%al; outb $0xe9" ::"a"(c)); /* Magic BOCHS debug: writes 'c' to port 0xe9 */
@@ -70,7 +99,6 @@ void printc_color(char c)
     }
   }
 }
-
 
 void printc_xy(Byte mx, Byte my, char c)
 {

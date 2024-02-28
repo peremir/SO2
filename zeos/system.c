@@ -14,7 +14,14 @@
 #include <zeos_mm.h> /* TO BE DELETED WHEN ADDED THE PROCESS MANAGEMENT CODE TO BECOME MULTIPROCESS */
 
 void printEntry() {
-	printk(" (HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
 }
 
 
