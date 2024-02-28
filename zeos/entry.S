@@ -68,7 +68,7 @@
       movb $0x20, %al; \
       outb %al, $0x20; \
 
-ENTRY (hank)
+ENTRY (hank) /* Keyboard handler */
 	SAVE_ALL
 	EOI
 	call printEntry

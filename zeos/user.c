@@ -14,6 +14,6 @@ int __attribute__ ((__section__(".text.main")))
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
   int x = addAsm(0x42, 0x666);  
-  
+
   while(1) { }
 }
