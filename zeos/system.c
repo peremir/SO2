@@ -14,7 +14,14 @@
 #include <zeos_mm.h> /* TO BE DELETED WHEN ADDED THE PROCESS MANAGEMENT CODE TO BECOME MULTIPROCESS */
 
 void printEntry() {
-	printk(" (HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
+	printk("\n(HANK)Interrup keyboard");
 }
 
 
@@ -102,7 +109,7 @@ int __attribute__((__section__(".text.main")))
   copy_data((void *) KERNEL_START + *p_sys_size, (void*)L_USER_START, *p_usr_size);
 
 
-  printk("Kernel modified :)");
+  printk_color("Pere i Pol - Kernel modified :D");
 
   enable_int();
   /*
