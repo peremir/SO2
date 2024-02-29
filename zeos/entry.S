@@ -71,7 +71,7 @@
 ENTRY (hank) /* Keyboard handler */
 	SAVE_ALL
 	EOI
-	call printEntry
+	call keyboardService
 	RESTORE_ALL
 	IRET
 
