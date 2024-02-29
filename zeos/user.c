@@ -6,6 +6,9 @@ int pid;
 
 //definir funcio 
 int addAsm(int par1, int par2);
+int write(int fd, char * buffer, int size);
+
+
 
 int __attribute__ ((__section__(".text.main")))
   main(void)
@@ -15,5 +18,7 @@ int __attribute__ ((__section__(".text.main")))
 
   int x = addAsm(0x42, 0x666);  
 
+//  write(1,"h",sizeof("h"));
+  
   while(1) { }
 }

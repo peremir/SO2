@@ -14,6 +14,9 @@ ret
 ENTRY(write)
 
 //1) Pas de Parámetres
+push %ebp
+mov %esp, %ebp
+
 mov 16(%ebp), %edx
 mov 12(%ebp), %ecx
 mov 8(%ebp), %ebx
@@ -25,5 +28,7 @@ mov $4, %eax
 int $0x80
 
 //4) Tractament d'errors
+
+pop %ebp
 ret
 

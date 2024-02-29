@@ -18,17 +18,22 @@
 
 
 int sys_write(int fd, char * buffer, int size) {
-	if (check_fd(fd, ESCRIPTURA)) {
-		return -1;
+	
+	return fd;
+	
+	if (check_fd(fd, ESCRIPTURA)!=0) {
+		return -5;
 	}
 
-	if (buffer == null) {
+	if (buffer == NULL) {
 		return -2;
 	}
 
 	if (size <= 0) {
 		return -3;
 	}
+
+	sys_write_console(buffer, size);
 	return 0;
 }
 
