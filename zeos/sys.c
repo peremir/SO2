@@ -16,6 +16,23 @@
 #define LECTURA 0
 #define ESCRIPTURA 1
 
+
+int sys_write(int fd, char * buffer, int size) {
+	if (check_fd(fd, ESCRIPTURA)) {
+		return -1;
+	}
+
+	if (buffer == null) {
+		return -2;
+	}
+
+	if (size <= 0) {
+		return -3;
+	}
+	return 0;
+}
+
+
 int check_fd(int fd, int permissions)
 {
   if (fd!=1) return -9; /*EBADF*/
