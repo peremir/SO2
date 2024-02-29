@@ -43,5 +43,26 @@ int sys_fork()
 }
 
 void sys_exit()
-{  
+{
+	
+}
+
+int sys_write(int fd, char * buffer, int size)
+{
+  if (chec_fd(fd, ESCRIPTURA) != 0)
+  {
+    return -1;
+  }
+
+  if (buffer == NULL)
+  {
+    return -2;
+  }
+
+  if (size <= 0)
+  {
+    return -3;
+  }
+  
+
 }

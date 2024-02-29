@@ -43,3 +43,8 @@ int strlen(char *a)
   return i;
 }
 
+void perror(void)
+{
+
+
+}

@@ -73,5 +73,19 @@ ENTRY (hank) /* Keyboard handler */
 	EOI
 	call keyboardService
 	RESTORE_ALL
-	IRET
+	iret
 
+ENTRY(system_call_handler)
+	SAVE_ALL				;// Save the current context
+	cmpl $0, %EAX				;// Is syscall number negative?
+	jl err					;// If it is, jump to return an error
+	cmpl $MAX_SYSCALL, %EAX			;// Is syscall greater than MAX_SYSCALL (4)?
+	jg err					;// If it is, jump to return an error
+	call *sys_call_table(, %EAX, 0x04)	;// Call the corresponding service routine
+	jmp fin					;// Finish
+err:
+	movl $-38, %EAX				;// Move to EAX the ENOSYS error
+fin:
+	movl %EAX, 0x18(%esp)			;// Move to EAX the ENOSYS error
+	RESTORE_ALL				;// Restore the context
+	iret
