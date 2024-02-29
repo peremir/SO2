@@ -6,6 +6,7 @@ int pid;
 
 //definir funcio 
 int addAsm(int par1, int par2);
+int write (int fd, char * buffer, int size);
 
 int __attribute__ ((__section__(".text.main")))
   main(void)
@@ -14,6 +15,8 @@ int __attribute__ ((__section__(".text.main")))
      /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
   int x = addAsm(0x42, 0x666);  
-
+  
+  write(1,"\nsyscall write funcionant :)", 28);
+  
   while(1) { }
 }

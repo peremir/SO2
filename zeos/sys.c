@@ -49,7 +49,7 @@ void sys_exit()
 
 int sys_write(int fd, char * buffer, int size)
 {
-  if (chec_fd(fd, ESCRIPTURA) != 0)
+  if (check_fd(fd, ESCRIPTURA) < 0)
   {
     return -1;
   }
@@ -59,10 +59,10 @@ int sys_write(int fd, char * buffer, int size)
     return -2;
   }
 
-  if (size <= 0)
+  if (size < 0)
   {
     return -3;
   }
   
-
+  sys_write_console(buffer, size);
 }
