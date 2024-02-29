@@ -93,10 +93,16 @@ void setIdt()
 void keyboardService()
 {
   unsigned char key = inb(0x60);
-
-  if(key & 0x80 == 0x80)
+  
+  if((key & 0x80) != 0x80)
   { 
-    printc_xy(0,0,char_map[key]);
+    if (char_map[key]!='\0') {
+    	printc_xy(0,0,char_map[key]);
+    }
+    else {
+    	printc_xy(0,0,'\C');
+    }
+  
   }
 
 }
