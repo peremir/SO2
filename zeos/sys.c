@@ -19,10 +19,8 @@
 
 int sys_write(int fd, char * buffer, int size) {
 	
-	return fd;
-	
 	if (check_fd(fd, ESCRIPTURA)!=0) {
-		return -5;
+		return -1;
 	}
 
 	if (buffer == NULL) {
