@@ -18,7 +18,7 @@ int __attribute__ ((__section__(".text.main")))
 
   //int x = addAsm(0x42, 0x666);  
 
-  write(2,"miau",3);
+  write(1,"miau",5);
   
   while(1) { }
 }
