@@ -25,5 +25,7 @@ int __attribute__ ((__section__(".text.main")))
   }
   
 
+  char *p = 0;
+  *p = 'x';
   while(1) { }
 }

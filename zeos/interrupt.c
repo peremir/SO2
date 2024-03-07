@@ -133,12 +133,12 @@ void pf_routine(int error, int eip) {
 //	necesito la adreça on ha fallat la pinga
 
 	char hexChars[] = "0123456789ABCDEF";
-    	char hex[9]; // 8 caracteres para el valor hexadecimal más el terminador nulo
+    	char hex[6]; // 5 caracteres para el valor hexadecimal más el terminador nulo
 
-    	for (int i = 0; i < 8; ++i) {
-        	hex[i] = hexChars[(eip >> (28 - i * 4)) & 0xF];
+    	for (int i = 0; i < 5; ++i) {
+        	hex[i] = hexChars[(eip >> (16 - i * 4)) & 0xF];
     	}
-    	hex[8] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
+    	hex[5] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
 
 	printk("\nProcess generates a PAGE FAULT exception at EIP: 0x");
 	printk(hex);
