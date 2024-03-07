@@ -33,7 +33,7 @@ char char_map[] =
   '\0','\0','\0','\0','\0','\0','\0','\0',
   '\0','\0'
 };
-
+;
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {
   /***********************************************************************/
@@ -60,41 +60,43 @@ void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
   /* THE TRAP GATE FLAGS:                                  R1: pg. 5-11  */
   /* ********************                                                */
   /* flags = x xx 0x111 000 ?????                                        */
-  /*         |  |  |                                                     */
-  /*         |  |   \ D = Size of gate: 1 = 32 bits; 0 = 16 bits         */
-  /*         |   \ DPL = Num. higher PL from which it is accessible      */
-  /*          \ P = Segment Present bit                                  */
-  /***********************************************************************/
-  Word flags = (Word)(maxAccessibleFromPL << 13);
+/*         |  |  |                                                     */
+/*         |  |   \ D = Size of gate: 1 = 32 bits; 0 = 16 bits         */
+/*         |   \ DPL = Num. higher PL from which it is accessible      */
+/*          \ P = Segment Present bit                                  */
+/***********************************************************************/
+Word flags = (Word)(maxAccessibleFromPL << 13);
 
-  //flags |= 0x8F00;    /* P = 1, D = 1, Type = 1111 (Trap Gate) */
-  /* Changed to 0x8e00 to convert it to an 'interrupt gate' and so
-     the system calls will be thread-safe. */
-  flags |= 0x8E00;    /* P = 1, D = 1, Type = 1110 (Interrupt Gate) */
+//flags |= 0x8F00;    /* P = 1, D = 1, Type = 1111 (Trap Gate) */
+/* Changed to 0x8e00 to convert it to an 'interrupt gate' and so
+the system calls will be thread-safe. */
+flags |= 0x8E00;    /* P = 1, D = 1, Type = 1110 (Interrupt Gate) */
 
-  idt[vector].lowOffset       = lowWord((DWord)handler);
-  idt[vector].segmentSelector = __KERNEL_CS;
-  idt[vector].flags           = flags;
-  idt[vector].highOffset      = highWord((DWord)handler);
+idt[vector].lowOffset       = lowWord((DWord)handler);
+idt[vector].segmentSelector = __KERNEL_CS;
+idt[vector].flags           = flags;
+idt[vector].highOffset      = highWord((DWord)handler);
 }
 
 
 void setIdt()
 {
-  /* Program interrups/exception service routines */
-  idtR.base  = (DWord)idt;
-  idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
-  
-  set_handlers();
+/* Program interrups/exception service routines */
+idtR.base  = (DWord)idt;
+idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
 
-  /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
-  setInterruptHandler(33, hank, 0);
-  setInterruptHandler(32, clank, 0);
-  setTrapHandler(0x80,system_call_handler,3);
+set_handlers();
+
+/* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
+setInterruptHandler(33, hank, 0);  /* Keyboard interrupt */
+setInterruptHandler(32, clank, 0); /* Clock interrupt */
+
+setTrapHandler(0x80,system_call_handler,3);
 
 
   set_idt_reg(&idtR);
 }
+
 
 void keyboardService()
 {
@@ -114,7 +116,6 @@ void keyboardService()
 }
 
 
-
 void clock_routine() {
 	zeos_ticks++;
 	zeos_show_clock();	
@@ -122,5 +123,5 @@ void clock_routine() {
 
 void clockRoutine()
 {
- zeos_show_clock(); 
+  zeos_show_clock(); 
 }
