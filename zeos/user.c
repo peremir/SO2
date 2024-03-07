@@ -18,7 +18,9 @@ int __attribute__ ((__section__(".text.main")))
 
   int x = addAsm(0x42, 0x666);  
   
-  write(1,"\nsyscall write funcionant :)", 28);
-  
+//  write(1,"\nsyscall write funcionant :)", 28);
+  char* p = 0;
+  *p = 0x666666;
+
   while(1) { }
 }

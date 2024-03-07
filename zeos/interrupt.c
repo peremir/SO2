@@ -15,6 +15,7 @@ unsigned int zeos_ticks = 0;
 
 void hank();
 void clank();
+void page_fault_exception_handler();
 void system_call_handler();
 
 char char_map[] =
@@ -90,8 +91,10 @@ void setIdt()
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
   setInterruptHandler(33, hank, 0);
   setInterruptHandler(32, clank, 0);
-  setTrapHandler(0x80,system_call_handler,3);
+  setInterruptHandler(14, page_fault_exception_handler, 0);
 
+  setTrapHandler(0x80,system_call_handler,3);
+  
 
   set_idt_reg(&idtR);
 }
@@ -124,3 +127,24 @@ void clockRoutine()
 {
  zeos_show_clock(); 
 }
+
+
+
+void pf_routine(int error, int eip) {
+//	necesito la adreça on ha fallat la pinga
+
+	char hexChars[] = "0123456789ABCDEF";
+    	char hex[9]; // 8 caracteres para el valor hexadecimal más el terminador nulo
+
+    	for (int i = 0; i < 8; ++i) {
+        	hex[i] = hexChars[(eip >> (28 - i * 4)) & 0xF];
+    	}
+    	hex[8] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
+
+	printk("\nProcess generates a PAGE FAULT exception at EIP: 0x");
+	printk(hex);
+	printk("\n\n");
+	while(1);
+}
+
+

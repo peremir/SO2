@@ -120,3 +120,12 @@ sysenter_fin:
 	sti					// Enable interrupts again
 	sysexit
 
+
+ENTRY(page_fault_exception_handler)
+	call pf_routine
+	add $4, %esp
+	iret
+
+
+
+
