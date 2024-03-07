@@ -1,3 +1,7 @@
+/*
+ * wrapper.S - Wrapper functions code
+ */
+
 #include <asm.h>
 
 ENTRY(addAsm)
