@@ -11,6 +11,7 @@
 
 Gate idt[IDT_ENTRIES];
 Register    idtR;
+unsigned int zeos_ticks = 0;
 
 void hank();
 void clank();
@@ -89,8 +90,8 @@ void setIdt()
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
   setInterruptHandler(33, hank, 0);
   setInterruptHandler(32, clank, 0);
+  setTrapHandler(0x80,system_call_handler,3);
 
-  setTrapHandler(0x80, system_call_handler, 3);
 
   set_idt_reg(&idtR);
 }
@@ -110,7 +111,13 @@ void keyboardService()
       printc_xy(0,0,'C');
     }
   }
+}
 
+
+
+void clock_routine() {
+	zeos_ticks++;
+	zeos_show_clock();	
 }
 
 void clockRoutine()

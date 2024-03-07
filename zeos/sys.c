@@ -16,6 +16,31 @@
 #define LECTURA 0
 #define ESCRIPTURA 1
 
+
+extern unsigned int zeos_ticks;
+
+int sys_write(int fd, char * buffer, int size) {
+
+	if (check_fd(fd, ESCRIPTURA)!=0) {
+		return -1;
+	}
+
+	if (buffer == NULL) {
+		return -2;
+	}
+
+	if (size <= 0) {
+		return -3;
+	}
+
+	sys_write_console(buffer, size);
+	return 0;
+}
+
+unsigned long sys_gettime() {
+	return zeos_ticks;
+}
+
 int check_fd(int fd, int permissions)
 {
   if (fd!=1) return -9; /*EBADF*/
@@ -47,22 +72,4 @@ void sys_exit()
 	
 }
 
-int sys_write(int fd, char * buffer, int size)
-{
-  if (check_fd(fd, ESCRIPTURA) < 0)
-  {
-    return -1;
-  }
 
-  if (buffer == NULL)
-  {
-    return -2;
-  }
-
-  if (size < 0)
-  {
-    return -3;
-  }
-  
-  sys_write_console(buffer, size);
-}

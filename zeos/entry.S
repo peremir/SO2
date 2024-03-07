@@ -119,3 +119,4 @@ sysenter_fin:
 	movl 12(%ESP), %ECX 			// User stack address
 	sti					// Enable interrupts again
 	sysexit
+

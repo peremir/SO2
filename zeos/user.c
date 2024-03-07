@@ -6,7 +6,9 @@ int pid;
 
 //definir funcio 
 int addAsm(int par1, int par2);
-int write (int fd, char * buffer, int size);
+int write(int fd, char * buffer, int size);
+unsigned int gettime();
+
 
 int __attribute__ ((__section__(".text.main")))
   main(void)
