@@ -75,6 +75,13 @@ ENTRY (hank) /* Keyboard handler */
 	RESTORE_ALL
 	iret
 
+ENTRY (clank) /* System clock handler */
+        SAVE_ALL
+        EOI
+        call clockRoutine 
+        RESTORE_ALL
+        iret
+
 ENTRY(system_call_handler)
 	SAVE_ALL				// Save the current context
 	cmpl $0, %EAX				// Is syscall number negative?
