@@ -17,6 +17,8 @@
 #define ESCRIPTURA 1
 
 
+extern unsigned int zeos_ticks;
+
 int sys_write(int fd, char * buffer, int size) {
 
 	if (check_fd(fd, ESCRIPTURA)!=0) {
@@ -35,6 +37,9 @@ int sys_write(int fd, char * buffer, int size) {
 	return 0;
 }
 
+unsigned long sys_gettime() {
+	return zeos_ticks;
+}
 
 int check_fd(int fd, int permissions)
 {

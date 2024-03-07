@@ -28,7 +28,7 @@ mov $4, %eax
 int $0x80
 
 cmpl $0, %eax
-jge fin
+jge write_fin
 
 // save -eax to errno here. i dont know how to do that yet.
 neg %eax
@@ -36,7 +36,56 @@ movl %eax, errno
 mov $-1, %eax
 
 
-fin:
+write_fin:
 pop %ebp
 //4) Tractament d'errors
 ret
+
+
+
+
+ENTRY (gettime)
+push %ebp
+mov %esp, %ebp
+
+//2) Dir quin servei és
+mov $10, %eax
+
+//3) INT
+int $0x80
+
+cmpl $0, %eax
+jge gettime_fin
+
+// save -eax to errno here. i dont know how to do that yet.
+neg %eax
+movl %eax, errno
+mov $-1, %eax
+
+
+gettime_fin:
+pop %ebp
+//4) Tractament d'errors
+ret
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -7,7 +7,7 @@ int pid;
 //definir funcio 
 int addAsm(int par1, int par2);
 int write(int fd, char * buffer, int size);
-
+unsigned int gettime();
 
 
 int __attribute__ ((__section__(".text.main")))
@@ -18,7 +18,8 @@ int __attribute__ ((__section__(".text.main")))
 
   //int x = addAsm(0x42, 0x666);  
 
-  write(1,"miau",5);
   
-  while(1) { }
+  
+  while(1) {  
+  }
 }
