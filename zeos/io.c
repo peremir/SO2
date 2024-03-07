@@ -30,13 +30,17 @@ Byte inb (unsigned short port)
 void scroll()
 {
   Word *screen = (Word *)0xb8000;
-  for (int i = 0; i < (NUM_ROWS - 1) * NUM_COLUMNS; i++) // loop through the screen content except the last row
+  // loop through the screen content except the last row
+  for (int i = 0; i < (NUM_ROWS - 1) * NUM_COLUMNS; i++) 
   {
-    screen[i] = screen[i + NUM_COLUMNS]; // copy the content of the next row to the current row
+    // copy the content of the next row to the current row
+    screen[i] = screen[i + NUM_COLUMNS];
   }
-  for (int i = (NUM_ROWS - 1) * NUM_COLUMNS; i < NUM_ROWS * NUM_COLUMNS; i++) // loop through the last row
+  // loop through the last row
+  for (int i = (NUM_ROWS - 1) * NUM_COLUMNS; i < NUM_ROWS * NUM_COLUMNS; i++)
   {
-    screen[i] = 0x0200; // clear the content of the last row
+    // clear the content of the last row
+    screen[i] = 0x0200;
   }
 }
 
@@ -48,11 +52,13 @@ void printc(char c)
   {
     x = 0;
     y=(y+1)%NUM_ROWS;
-
-    if (y >= NUM_ROWS-1) // if the cursor reaches the last row
+    
+    // if the cursor reaches the last row
+    if (y >= NUM_ROWS-1)
     {
-      scroll(); // call the scroll function to move the screen content up by one row
-      y--; // adjust the cursor position
+      // call the scroll function and adjuts the cursos position y--
+      scroll();
+      y--;
     }
   }
   else
@@ -64,11 +70,13 @@ void printc(char c)
     {
       x = 0;
       y=(y+1)%NUM_ROWS;
-
-      if (y >= NUM_ROWS-1) // if the cursor reaches the last row
+      
+      // if the cursor reaches the last row
+      if (y >= NUM_ROWS-1)
       {
-        scroll(); // call the scroll function to move the screen content up by one row
-        y--; // adjust the cursor position
+	// call the scroll function and adjuts the cursos position y--
+        scroll(); 
+        y--; 
       }
     }
   }
@@ -85,13 +93,16 @@ void printc_color(char c)
   }
   else
   {
-   /*                    in 0x00FF | 0xN200, the first N byte is the color
-   0=Black, 1=Blue, 2=Green, 3=Aqua, 4=Red, 5=Purple, 6=Yellow, 7=White, 8=Gray, 9=Light Blue, 
-   A=Light Green, B=Light Aqua, C=Light Red, D=Light Purple, E=Light Yellow, F=Bright White */
+    /*                    in 0x00FF | 0xN200, the first N byte is the color
+    0=Black, 1=Blue, 2=Green, 3=Aqua, 4=Red, 5=Purple, 6=Yellow, 7=White, 8=Gray, 9=Light Blue, 
+    A=Light Green, B=Light Aqua, C=Light Red, D=Light Purple, E=Light Yellow, F=Bright White */
+
     Word ch = (Word) (c & 0x00FF) | 0x5200;
-        Word *screen = (Word *)0xb8000;
-	  /* y= adalt_abaix   x= dreta_esquerra */
-        screen[(y * NUM_COLUMNS + x)] = ch;
+    Word *screen = (Word *)0xb8000;
+    
+    /* y= adalt_abaix   x= dreta_esquerra */
+    screen[(y * NUM_COLUMNS + x)] = ch;
+    
     if (++x >= NUM_COLUMNS)
     {
       x = 0;

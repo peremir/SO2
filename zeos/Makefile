@@ -40,7 +40,7 @@ LIBZEOS = -L . -l zeos
 #add to USROBJ any object files required to complete the user program
 USROBJ = \
 	libc.o \
-	suma.o \
+	wrapper.o \
 	# libjp.a \
 
 all:zeos.bin
@@ -59,7 +59,7 @@ bootsect: bootsect.o
 bootsect.o: bootsect.s
 	$(AS86) -o $@ $<
 	
-suma.s: suma.S $(INCLUDEDIR)/asm.h
+wrapper.s: wrapper.S $(INCLUDEDIR)/asm.h
 	$(CPP) $(ASMFLAGS) -o $@ $<
 
 bootsect.s: bootsect.S
