@@ -68,14 +68,14 @@
       movb $0x20, %al; \
       outb %al, $0x20; \
 
-ENTRY (hank) /* Keyboard handler */
+ENTRY (keyboardHandler) /* Keyboard handler */ // hank
 	SAVE_ALL
 	EOI
 	call keyboardService
 	RESTORE_ALL
 	iret
 
-ENTRY (clank) /* System clock handler */
+ENTRY (clockHandler) /* System clock handler */
         SAVE_ALL
         EOI
         call clockRoutine 

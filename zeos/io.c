@@ -13,8 +13,7 @@
 #define NUM_COLUMNS 80
 #define NUM_ROWS    25
 
-Byte x, y=19;
-
+Byte x, y;
 
 
 /* Read a byte from 'port' */
@@ -44,26 +43,34 @@ void scroll()
   }
 }
 
+void change_pointer(Byte a, Byte b)
+{
+  x = a;
+  y = b;
+}
+
 //Clear the entire screen to make it fully black
-void clear_screen()
+void clear_screen(int mask)
 {
   
   Word *screen = (Word *)0xb8000;
+  
+  Word attribute = mask; 
+  // Color de fondo rojo
+  
+  Word empty_character = attribute | ' '; 
+  // Carácter de espacio con fondo rojo
+  
   // Loop through all rows and columns of the screen
   for (int row = 0; row < NUM_ROWS; row++) {
     for (int col = 0; col < NUM_COLUMNS; col++) {
       // Clear each character on the screen
-      screen[row * NUM_COLUMNS + col] = 0x0200;
+      screen[row * NUM_COLUMNS + col] = empty_character;
     }
   }
   // Reset the cursor position to (0,0)
   x = 0;
   y = 0;
-  /*
-  for (int row = 0; row < NUM_ROWS; row++)
-  {
-  scroll();
-  }*/
 }
 
 //OPTIONAL Modified printc function to scroll text when reaches bottom of screen
@@ -105,30 +112,40 @@ void printc(char c)
 }
 
 //OPTIONAL Modified printc color to print foreground in a different color
-void printc_color(char c)
+void printc_color(char c, int mask)
 {
-     __asm__ __volatile__ ( "movb %0, %%al; outb $0xe9" ::"a"(c)); /* Magic BOCHS debug: writes 'c' to port 0xe9 */
+     __asm__ __volatile__ ( "movb %0, %%al; outb $0xe9" ::"a"(c)); 
+     /* Magic BOCHS debug: writes 'c' to port 0xe9 */
   if (c=='\n')
   {
     x = 0;
     y=(y+1)%NUM_ROWS;
+
+    // if the cursor reaches the last row
+    if (y >= NUM_ROWS-1)
+    {
+      // call the scroll function and adjuts the cursos position y--
+      scroll();
+      y--;
+    }
   }
   else
   {
-    /*                    in 0x00FF | 0xN200, the first N byte is the color
-    0=Black, 1=Blue, 2=Green, 3=Aqua, 4=Red, 5=Purple, 6=Yellow, 7=White, 8=Gray, 9=Light Blue, 
-    A=Light Green, B=Light Aqua, C=Light Red, D=Light Purple, E=Light Yellow, F=Bright White */
-
-    Word ch = (Word) (c & 0x00FF) | 0x5200;
+    Word ch = (Word) (c & 0x00FF) | mask;
     Word *screen = (Word *)0xb8000;
-    
-    /* y= adalt_abaix   x= dreta_esquerra */
     screen[(y * NUM_COLUMNS + x)] = ch;
-    
     if (++x >= NUM_COLUMNS)
     {
       x = 0;
       y=(y+1)%NUM_ROWS;
+
+      // if the cursor reaches the last row
+      if (y >= NUM_ROWS-1)
+      {
+        // call the scroll function and adjuts the cursos position y--
+        scroll();
+        y--;
+      }
     }
   }
 }
@@ -154,10 +171,10 @@ void printk(char *string)
 }
 
 //Modified printk function to call printc_color()
-void printk_color(char *string)
+void printk_color(char *string, int mask)
 {
   int i;
   for (i = 0; string[i]; i++)
-    printc_color(string[i]);
+    printc_color(string[i], mask);
 }
 
