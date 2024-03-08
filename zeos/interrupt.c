@@ -21,11 +21,11 @@ void page_fault_exception_handler();
 char char_map[] =
 {
   '\0','\0','1','2','3','4','5','6',
-  '7','8','9','0','\'','Â¡','\0','\0',
+  '7','8','9','0','\'','¡','\0','\0',
   'q','w','e','r','t','y','u','i',
   'o','p','`','+','\0','\0','a','s',
-  'd','f','g','h','j','k','l','Ã±',
-  '\0','Âº','\0','Ã§','z','x','c','v',
+  'd','f','g','h','j','k','l','ñ',
+  '\0','º','\0','ç','z','x','c','v',
   'b','n','m',',','.','-','\0','*',
   '\0','\0','\0','\0','\0','\0','\0','\0',
   '\0','\0','\0','\0','\0','\0','\0','7',
@@ -82,19 +82,19 @@ idt[vector].highOffset      = highWord((DWord)handler);
 
 void setIdt()
 {
-  /* Program interrups/exception service routines */
-  idtR.base  = (DWord)idt;
-  idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
+/* Program interrups/exception service routines */
+idtR.base  = (DWord)idt;
+idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
 
-  set_handlers();
+set_handlers();
 
-  /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
-  setInterruptHandler(33, keyboardHandler, 0);  /* Keyboard interrupt */
-  setInterruptHandler(32, clockHandler, 0); /* Clock interrupt */
-  setInterruptHandler(14, page_fault_exception_handler, 0);
+/* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
+setInterruptHandler(33, keyboardHandler, 0);  /* Keyboard interrupt */
+setInterruptHandler(32, clockHandler, 0); /* Clock interrupt */
+setInterruptHandler(14, page_fault_exception_handler, 0);
 
-  setTrapHandler(0x80,system_call_handler,3);
-  
+setTrapHandler(0x80,system_call_handler,3);
+
 
   set_idt_reg(&idtR);
 }
@@ -147,18 +147,24 @@ void pf_red_screen(char *hex)
 
 
 void pf_routine(int error, int eip) {
-  // necesito la adreÃ§a on ha fallat la pinga
+  // necesito la adreça on ha fallat la pinga
 
   char hexChars[] = "0123456789ABCDEF";
-  char hex[6]; // 5 caracteres para el valor hexadecimal mÃ¡s el terminador nulo
+  char hex[6]; // 5 caracteres para el valor hexadecimal más el terminador nulo
 
   for (int i = 0; i < 5; ++i) 
   {
     hex[i] = hexChars[(eip >> (16 - i * 4)) & 0xF];
   }
-  hex[5] = '\0'; // Asegurarse de que la cadena estÃ© terminada correctamente
+  hex[5] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
   
   pf_red_screen(hex);
 
   while(1);
 }
+
+
+
+
+
+
