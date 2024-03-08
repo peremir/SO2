@@ -71,9 +71,28 @@ int __attribute__((__section__(".text.main")))
   set_seg_regs(__KERNEL_DS, __KERNEL_DS, (DWord) &task[4]);
 
   /*** DO *NOT* ADD ANY CODE IN THIS ROUTINE BEFORE THIS POINT ***/
+  
+  clear_screen(0x0400);
+
+  char *ascii_art[] = 
+  {
+        " ______      _____ _____ ",
+        "|___  /     |  _  /  ___|",
+        "   / /  ___ | | | \\ `--. ",
+        "  / /  / _ \\| | | |`--. \\",
+        "./ /__|  __/\\ \\_/ /\\__/ /",
+        "\\_____/\\___| \\___/\\____/ ",
+        "                         "
+  }; 
+  
+  
+  for (int i = 0; i < sizeof(ascii_art) / sizeof(ascii_art[0]); i++)
+  {
+        printk(ascii_art[i]);
+        printk("\n");
+  }
 
   printk("Kernel Loaded!    ");
-
 
   /* Initialize hardware data */
   setGdt(); /* Definicio de la taula de segments de memoria */
@@ -97,8 +116,7 @@ int __attribute__((__section__(".text.main")))
   /* Move user code/data now (after the page table initialization) */
   copy_data((void *) KERNEL_START + *p_sys_size, (void*)L_USER_START, *p_usr_size);
 
-
-  printk_color("Pere i Pol - Kernel modified :D");
+  printk_color("Pere i Pol - Kernel modified :D", 0x5200);
 
   enable_int();
   /*
