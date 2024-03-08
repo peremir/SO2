@@ -140,9 +140,21 @@ void pf_routine(int error, int eip) {
     	}
     	hex[5] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
 
-	printk("\nProcess generates a PAGE FAULT exception at EIP: 0x");
-	printk(hex);
-	printk("\n\n");
+
+
+	    printk("\n\n\n");
+	    printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
+	    printk_color("!!                                                     !!\n", 0x0400);
+	    printk_color("!!  !!! Process generates a PAGE FAULT exception !!!   !!\n", 0x0400);
+	    printk_color("!!               at EIP: 0x", 0x0400);
+	    printk_color(hex, 0x0400);
+	    printk_color("                       !!\n", 0x0400);
+	    printk_color("!!                                                     !!\n", 0x0400);
+	    printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n", 0x0400);
+	
+	//printk("\nProcess generates a PAGE FAULT exception at EIP: 0x");
+	//printk(hex);
+	//printk("\n\n");
 	while(1);
 }
 

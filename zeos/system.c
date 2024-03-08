@@ -98,7 +98,7 @@ int __attribute__((__section__(".text.main")))
   copy_data((void *) KERNEL_START + *p_sys_size, (void*)L_USER_START, *p_usr_size);
 
 
-  printk_color("Pere i Pol - Kernel modified :D");
+  printk_color("Pere i Pol - Kernel modified :D", 0x8d00);
 
   enable_int();
   /*
