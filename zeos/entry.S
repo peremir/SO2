@@ -125,3 +125,12 @@ ENTRY(page_fault_exception_handler)
 	add $4, %esp
 	iret
 
+
+ENTRY(page_fault_exception_handler)
+	call pf_routine
+	add $4, %esp
+	iret
+
+
+
+
