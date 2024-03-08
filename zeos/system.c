@@ -71,6 +71,26 @@ int __attribute__((__section__(".text.main")))
   set_seg_regs(__KERNEL_DS, __KERNEL_DS, (DWord) &task[4]);
 
   /*** DO *NOT* ADD ANY CODE IN THIS ROUTINE BEFORE THIS POINT ***/
+  
+  clear_screen();
+
+  char *ascii_art[] = 
+  {
+        "                   _____ _____ ",
+        "                  |  _  /  ___|",
+        " _______  ___  ___| | | \\ `--. ",
+        "|_  / _ \\/ _ \\/ __| | | |`--. \\",
+        " / /  __/ (_) \\__ \\ \\_/ /\\__/ /",
+        "/___\\___|\\___/|___/\\___/\\____/ ",
+        "                               "
+  };
+  
+  
+  for (int i = 0; i < sizeof(ascii_art) / sizeof(ascii_art[0]); i++)
+  {
+        printk(ascii_art[i]);
+        printk("\n");
+  }
 
   printk("Kernel Loaded!    ");
 

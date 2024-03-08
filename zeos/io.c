@@ -26,7 +26,7 @@ Byte inb (unsigned short port)
   return v;
 }
 
-//
+//NEW Scroll up the screen by one row
 void scroll()
 {
   Word *screen = (Word *)0xb8000;
@@ -42,6 +42,28 @@ void scroll()
     // clear the content of the last row
     screen[i] = 0x0200;
   }
+}
+
+//Clear the entire screen to make it fully black
+void clear_screen()
+{
+  
+  Word *screen = (Word *)0xb8000;
+  // Loop through all rows and columns of the screen
+  for (int row = 0; row < NUM_ROWS; row++) {
+    for (int col = 0; col < NUM_COLUMNS; col++) {
+      // Clear each character on the screen
+      screen[row * NUM_COLUMNS + col] = 0x0200;
+    }
+  }
+  // Reset the cursor position to (0,0)
+  x = 0;
+  y = 0;
+  /*
+  for (int row = 0; row < NUM_ROWS; row++)
+  {
+  scroll();
+  }*/
 }
 
 //OPTIONAL Modified printc function to scroll text when reaches bottom of screen
@@ -110,32 +132,6 @@ void printc_color(char c)
     }
   }
 }
-
-
-
-
-void printcolor(char c)
-{
-     __asm__ __volatile__ ( "movb %0, %%al; outb $0xe9" ::"a"(c)); /* Magic BOCHS debug: writes 'c' to port 0xe9 */
-  if (c=='\n')
-  {
-    x = 0;
-    y=(y+1)%NUM_ROWS;
-  }
-  else
-  {
-    Word ch = (Word) (c & 0x00FF) | 0x8d00;
-	Word *screen = (Word *)0xb8000;
-	screen[(y * NUM_COLUMNS + x)] = ch;
-    if (++x >= NUM_COLUMNS)
-    {
-      x = 0;
-      y=(y+1)%NUM_ROWS;
-    }
-  }
-}
-
-
 
 
 void printc_xy(Byte mx, Byte my, char c)
