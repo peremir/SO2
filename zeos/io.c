@@ -43,13 +43,14 @@ void scroll()
   }
 }
 
+//NEW change pointer location
 void change_pointer(Byte a, Byte b)
 {
   x = a;
   y = b;
 }
 
-//Clear the entire screen to make it fully black
+//NEW Clear the entire screen to make it fully black
 void clear_screen(int mask)
 {
   
