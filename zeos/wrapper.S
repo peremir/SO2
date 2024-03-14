@@ -15,8 +15,8 @@ ENTRY(addAsm)
 
 ENTRY(write)
 	push   %ebp
-	push   %ebx
 	mov    %esp, %ebp
+	push   %ebx
 	mov    8(%ebp), %edx		// 1) Pas de Parámetres
 	mov    12(%ebp), %ecx
 	mov    16(%ebp), %ebx

@@ -155,9 +155,8 @@ void pf_routine(int error, int eip) {
   itoa(eip, char_eip);
   printk(char_eip);		
   
-  char hexChars[] = "0123456789ABCDEF";
   char hex[9]; // 5 caracteres para el valor hexadecimal más el terminador nulo
-  int decimal = 600;
+  int decimal = eip;
   int nonzero = 0;
 	for (int i = 0; i < 8; ++i) {
         	char digit = "0123456789ABCDEF"[decimal & 0xF];
@@ -169,12 +168,9 @@ void pf_routine(int error, int eip) {
         	}
         	decimal >>= 4;
     	}
-  hex[8] = '\0'; // Terminador nulo
-
-
-
   
-  hex[8] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
+  // Terminador nulo
+  hex[8] = '\0'; //Asegurarse de que la cadena esté terminada correctamente
   
   printk(" (0x");
   printk(hex);
