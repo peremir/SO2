@@ -33,13 +33,17 @@ int sys_write(int fd, char * buffer, int size)
 {        
   int error = check_fd(fd, ESCRIPTURA);
 	
-  if (error != 0) return error; /* Check the check_fd function returns */
+  if (error < 0) return error; /* Check the check_fd function returns */
 
   if (buffer == NULL) return -EFAULT; /* Bad address -14 */
 
   if (size <= 0) return -EINVAL; /* Invalid argument -22 */
+  char buff[50]; 
+  //falta bucle per iterar per copiar el buffer
+  error = copy_from_user(buffer, buff, size);
+  if(error < 0) return error; 
 
-  sys_write_console(buffer, size);
+  sys_write_console(buff, size);
   return 0; /* No error */
 }
 

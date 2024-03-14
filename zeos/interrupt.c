@@ -118,19 +118,13 @@ void keyboardService()
 }
 
 
-void clock_routine() {
+void clockRoutine() {
 	zeos_ticks++;
 	zeos_show_clock();	
 }
 
-void clockRoutine()
-{
-  zeos_show_clock(); 
-}
 
-
-
-void pf_red_screen(char *hex)
+void pf_red_screen(char *eip, char *hex)
 {
   clear_screen(0x4000);
   
@@ -139,15 +133,52 @@ void pf_red_screen(char *hex)
   printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
   printk_color("!!                                                     !!\n", 0x0400);
   printk_color("!!  !!! Process generates a PAGE FAULT exception !!!   !!\n", 0x0400);
-  printk_color("!!                 at EIP: 0x", 0x0400);
-  printk_color(hex, 0x0400);        printk_color("                     !!\n", 0x0400);
+
+  printk_color("!!             at EIP: @", 0x0400); 
+  printk_color(eip , 0x0400);
+  printk_color(" (0x", 0x0400);
+  printk_color(hex , 0x0400);
+  printk_color(")              !!\n", 0x0400);
+  
   printk_color("!!                                                     !!\n", 0x0400);
   printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
 }
 
-
+//NEW versio only text
 void pf_routine(int error, int eip) {
+  
+  char *text = "\nProcess generates a PAGE FAULT exception at EIP: @";
+  printk(text);
+  
+  char char_eip[24];
+  itoa(eip, char_eip);
+  printk(char_eip);		
+  
+  char hexChars[] = "0123456789ABCDEF";
+  char hex[6]; // 5 caracteres para el valor hexadecimal más el terminador nulo
+
+  for (int i = 0; i < 5; ++i)
+  {
+    hex[i] = hexChars[(eip >> (16 - i * 4)) & 0xF];
+  }
+  hex[5] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
+  
+  printk(" (0x");
+  printk(hex);
+  printk(")");
+
+  while(1);
+}
+
+/*
+//NEW versio amb page fault red screen
+void pf_routine(int error, int eip) 
+{
   // necesito la adreça on ha fallat la pinga
+  
+  char char_eip[24];
+  itoa(eip, char_eip);
+  printk(char_eip);
 
   char hexChars[] = "0123456789ABCDEF";
   char hex[6]; // 5 caracteres para el valor hexadecimal más el terminador nulo
@@ -158,11 +189,11 @@ void pf_routine(int error, int eip) {
   }
   hex[5] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
   
-  pf_red_screen(hex);
-
+  pf_red_screen(char_eip, hex);
+  
   while(1);
 }
-
+*/
 
 
 

@@ -122,6 +122,6 @@ sysenter_fin:
 	
 ENTRY(page_fault_exception_handler)
 	call pf_routine
-	add $4, %esp
+	//add $4, %esp
 	iret
 

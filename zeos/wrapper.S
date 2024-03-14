@@ -29,7 +29,7 @@ ENTRY(write)
 write_fin:
 	pop    %ebp
 	ret
-
+/*
 ENTRY (gettime)
 	push   %ebp
 	mov    %esp, %ebp
@@ -43,3 +43,32 @@ ENTRY (gettime)
 gettime_fin:
 	pop    %ebp 
 	ret
+*/
+
+
+
+ENTRY(gettime)
+	pushl %ebp
+	movl %esp, %ebp
+	movl $10, %eax
+	pushl %ecx
+	pushl %edx
+	pushl $return_gettime
+	pushl %ebp
+	movl %esp, %ebp
+	sysenter
+return_gettime:
+	popl %ebp
+	addl $4, %esp
+	popl %edx
+	popl %ecx
+	cmpl $0, %eax
+        jge gettime_fin
+        //negl %eax
+        movl %eax, errno
+        movl $-1, %eax
+gettime_fin:
+	popl %ebp
+	ret
+
+
