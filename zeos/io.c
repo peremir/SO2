@@ -121,7 +121,6 @@ void printc_color(char c, int mask)
   {
     x = 0;
     y=(y+1)%NUM_ROWS;
-
     // if the cursor reaches the last row
     if (y >= NUM_ROWS-1)
     {
@@ -139,7 +138,6 @@ void printc_color(char c, int mask)
     {
       x = 0;
       y=(y+1)%NUM_ROWS;
-
       // if the cursor reaches the last row
       if (y >= NUM_ROWS-1)
       {

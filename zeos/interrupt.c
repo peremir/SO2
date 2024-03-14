@@ -156,19 +156,31 @@ void pf_routine(int error, int eip) {
   printk(char_eip);		
   
   char hexChars[] = "0123456789ABCDEF";
-  char hex[6]; // 5 caracteres para el valor hexadecimal más el terminador nulo
+  char hex[9]; // 5 caracteres para el valor hexadecimal más el terminador nulo
+  int decimal = 600;
+  int nonzero = 0;
+	for (int i = 0; i < 8; ++i) {
+        	char digit = "0123456789ABCDEF"[decimal & 0xF];
+        	if (digit != '0' || nonzero) {
+            		hex[7 - i] = digit;
+            		nonzero = 1;
+        	} else {
+            		hex[7 - i] = '0';
+        	}
+        	decimal >>= 4;
+    	}
+  hex[8] = '\0'; // Terminador nulo
 
-  for (int i = 0; i < 5; ++i)
-  {
-    hex[i] = hexChars[(eip >> (16 - i * 4)) & 0xF];
-  }
-  hex[5] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
+
+
+  
+  hex[8] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
   
   printk(" (0x");
   printk(hex);
   printk(")");
 
-  while(1);
+ while(1);
 }
 
 /*
