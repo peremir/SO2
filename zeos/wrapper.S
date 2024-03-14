@@ -15,6 +15,7 @@ ENTRY(addAsm)
 
 ENTRY(write)
 	push   %ebp
+	push   %ebx
 	mov    %esp, %ebp
 	mov    8(%ebp), %edx		// 1) Pas de Parámetres
 	mov    12(%ebp), %ecx
@@ -27,9 +28,10 @@ ENTRY(write)
 	movl   %eax, errno		// 4) Tractament d'errors - Save errno to eax
 	mov    $-1, %eax
 write_fin:
+	pop    %ebx
 	pop    %ebp
 	ret
-/*
+
 ENTRY (gettime)
 	push   %ebp
 	mov    %esp, %ebp
@@ -43,10 +45,10 @@ ENTRY (gettime)
 gettime_fin:
 	pop    %ebp 
 	ret
-*/
 
 
 
+/*
 ENTRY(gettime)
 	pushl %ebp
 	movl %esp, %ebp
@@ -70,5 +72,5 @@ return_gettime:
 gettime_fin:
 	popl %ebp
 	ret
-
+*/
 
