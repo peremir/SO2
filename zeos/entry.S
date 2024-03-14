@@ -68,14 +68,14 @@
       movb $0x20, %al; \
       outb %al, $0x20; \
 
-ENTRY (hank) /* Keyboard handler */
+ENTRY (keyboardHandler) /* Keyboard handler */ // hank
 	SAVE_ALL
 	EOI
 	call keyboardService
 	RESTORE_ALL
 	iret
 
-ENTRY (clank) /* System clock handler */
+ENTRY (clockHandler) /* System clock handler */
         SAVE_ALL
         EOI
         call clockRoutine 
@@ -119,13 +119,9 @@ sysenter_fin:
 	movl 12(%ESP), %ECX 			// User stack address
 	sti					// Enable interrupts again
 	sysexit
-
-
+	
 ENTRY(page_fault_exception_handler)
 	call pf_routine
-	add $4, %esp
+	//add $4, %esp
 	iret
-
-
-
 

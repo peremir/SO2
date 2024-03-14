@@ -23,32 +23,28 @@ extern unsigned int zeos_ticks;
 
 int check_fd(int fd, int permissions)
 {
-  if (fd!=1) return -9; /*EBADF*/
-  if (permissions!=ESCRIPTURA) return -13; /*EACCES*/
-  return 0;
+  if (fd!=1) return -EBADF; /* Bad file number -9 */
+  if (permissions!=ESCRIPTURA) return -EACCES; /* Permission denied -13 */
+  
+  return 0; /* No error */
 }
 
 int sys_write(int fd, char * buffer, int size) 
 {        
   int error = check_fd(fd, ESCRIPTURA);
 	
-  if (error != 0) 
-  {
-    return error;
-  }
+  if (error < 0) return error; /* Check the check_fd function returns */
 
-  if (buffer == NULL)
-  {
-    return -EFAULT;
-  }
+  if (buffer == NULL) return -EFAULT; /* Bad address -14 */
 
-  if (size <= 0)
-  {
-    return -EINVAL;
-  }
+  if (size <= 0) return -EINVAL; /* Invalid argument -22 */
+  char buff[50]; 
+  //falta bucle per iterar per copiar el buffer
+  error = copy_from_user(buffer, buff, size);
+  if(error < 0) return error; 
 
-  sys_write_console(buffer, size);
-  return 0;
+  sys_write_console(buff, size);
+  return 0; /* No error */
 }
 
 unsigned long sys_gettime() 
@@ -58,12 +54,12 @@ unsigned long sys_gettime()
 
 int sys_ni_syscall()
 {
-	return -38; /*ENOSYS*/
+  return -ENOSYS; /* Invalid system call number -38 */
 }
 
 int sys_getpid()
 {
-	return current()->PID;
+  return current()->PID;
 }
 
 int sys_fork()
