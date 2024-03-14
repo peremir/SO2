@@ -38,12 +38,19 @@ int sys_write(int fd, char * buffer, int size)
   if (buffer == NULL) return -EFAULT; /* Bad address -14 */
 
   if (size <= 0) return -EINVAL; /* Invalid argument -22 */
-  char buff[50]; 
-  //falta bucle per iterar per copiar el buffer
-  error = copy_from_user(buffer, buff, size);
-  if(error < 0) return error; 
+  
+  for (int i = 0; i < size; ++i)
+  {
+    // Initialize the char that we are going to write
+    char buff;
 
-  sys_write_console(buff, size);
+    // Copy from user one char from the buffer moved by i
+    error = copy_from_user(buffer + i, &buff, sizeof(buff));
+    if (error < 0) return error;
+
+    sys_write_console(&buff, sizeof(buff));
+  }
+
   return 0; /* No error */
 }
 
