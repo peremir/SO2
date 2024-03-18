@@ -7,6 +7,7 @@
 #include <hardware.h>
 #include <io.h>
 #include <libc.h>
+#include <entry.h>
 
 #include <zeos_interrupt.h>
 
@@ -90,6 +91,10 @@ idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
 set_handlers();
 
 /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
+writeMSR(0x174, __KERNEL_CS);
+writeMSR(0x175, INITIAL_ESP);
+writeMSR(0x176, (int)syscall_handler_sysenter);
+
 setInterruptHandler(33, keyboardHandler, 0);  /* Keyboard interrupt */
 setInterruptHandler(32, clockHandler, 0); /* Clock interrupt */
 setInterruptHandler(14, page_fault_exception_handler, 0);

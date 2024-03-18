@@ -31,16 +31,14 @@ int __attribute__ ((__section__(".text.main")))
   if(write(1,"\nsyscall write funcionant :)",strlen("\nsyscall write funcionant :)")) < 0) perror();
   
   //Test de la syscall gettime feta amb sysenter
-	//char *buffer = "\0\0\0\0\0\n";
+  char *buffer = "\0\0\0\0\0\n";
 
-    	//write(1, "Gettime 1: ", 11);
-    	//itoa(gettime(), buffer);
-	//write(1, buffer, 6);
-
-	//while(gettime() < 500);
+  write(1, "\nGettime 1: ", 12);
+  itoa(gettime(), buffer);
+  write(1, buffer, 6);
 
   /* Funcio que provoca un page fault exception */
-  pf(); 
+  //pf(); 
 
 
   while(1) { }

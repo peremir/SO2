@@ -13,6 +13,7 @@ ENTRY(addAsm)
 	pop    %ebp
 	ret
 
+
 ENTRY(write)
 	push   %ebp
 	mov    %esp, %ebp
@@ -32,6 +33,7 @@ write_fin:
 	pop    %ebp
 	ret
 
+/*
 ENTRY (gettime)
 	push   %ebp
 	mov    %esp, %ebp
@@ -45,10 +47,10 @@ ENTRY (gettime)
 gettime_fin:
 	pop    %ebp 
 	ret
+*/
 
 
 
-/*
 ENTRY(gettime)
 	pushl %ebp
 	movl %esp, %ebp
@@ -72,5 +74,5 @@ return_gettime:
 gettime_fin:
 	popl %ebp
 	ret
-*/
+
 
