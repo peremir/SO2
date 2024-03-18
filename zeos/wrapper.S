@@ -13,7 +13,7 @@ ENTRY(addAsm)
 	pop    %ebp
 	ret
 
-
+/* System write interrupt wrapper */
 ENTRY(write)
 	push   %ebp
 	mov    %esp, %ebp
@@ -33,7 +33,7 @@ write_fin:
 	pop    %ebp
 	ret
 
-/*
+/* System gettime interrupt wrapper *//*
 ENTRY (gettime)
 	push   %ebp
 	mov    %esp, %ebp
@@ -49,8 +49,7 @@ gettime_fin:
 	ret
 */
 
-
-
+/* System gettime sysenter wrapper */
 ENTRY(gettime)
 	pushl %ebp
 	movl %esp, %ebp
@@ -74,5 +73,4 @@ return_gettime:
 gettime_fin:
 	popl %ebp
 	ret
-
 
