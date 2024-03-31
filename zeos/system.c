@@ -91,7 +91,6 @@ int __attribute__((__section__(".text.main")))
         printk(ascii_art[i]);
         printk("\n");
   }
-
   printk("Kernel Loaded!    ");
 
   /* Initialize hardware data */

@@ -6,10 +6,13 @@
 #include <mm.h>
 #include <io.h>
 
+struct list_head  freequeue;
+struct list_head readyqueue;
+
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
 
-#if 0
+#if 1
 struct task_struct *list_head_to_task_struct(struct list_head *l)
 {
   return list_entry( l, struct task_struct, list);
@@ -53,19 +56,32 @@ void cpu_idle(void)
 	}
 }
 
-void init_idle (void)
+void init_idle (void) 
 {
-
+  // 1) Get an available task_union from the freequeue 
+  //  to contain the characteristics of this process.
+  struct list_head *free = list_first(&freequeue);
+  list_del(free);
+  union task_union *pcb = (union task_union*)list_head_to_task_struct(free);
+  
+  //2) Assign PID 0 to the process. 
+  pcb->task.PID = 0; 
+  
+  // 3) Initialize field dir_pages_baseAaddr with a new directory 
+  //  to store the process address space using the allocate_DIR routine.
+  allocate_DIR(&(pcb->task));
 }
 
-void init_task1(void)
+void init_task1(void) // task1 = INIT
 {
+
 }
 
 
 void init_sched()
 {
-
+  INIT_LIST_HEAD(&freequeue);
+  INIT_LIST_HEAD(&readyqueue);
 }
 
 struct task_struct* current()
