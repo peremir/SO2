@@ -40,7 +40,6 @@ int __attribute__ ((__section__(".text.main")))
 	//while(gettime() < 500);
 
   /* Funcio que provoca un page fault exception */
-  pf(); 
 
 
   while(1) { }

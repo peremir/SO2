@@ -119,9 +119,57 @@ sysenter_fin:
 	movl 12(%ESP), %ECX 			// User stack address
 	sti					// Enable interrupts again
 	sysexit
-	
+
+ENTRY(writeMSR)
+	pushl %ebp
+	movl %esp, %ebp
+	movl 8(%ebp), %ecx
+	movl $0, %edx
+	movl 12(%ebp), %eax
+	wrmsr
+	popl %ebp
+	ret
+
 ENTRY(page_fault_exception_handler)
 	call pf_routine
 	//add $4, %esp
 	iret
+
+ENTRY(task_switch)
+	pushl %ebp
+	movl %esp, %ebp
+	pushl %esi
+	pushl %edi
+	pushl %ebx
+	
+	pushl 8(%ebp)
+	call inner_task_switch
+	addl $4, %esp
+
+	popl %ebx
+	popl %edi
+	popl %esi
+
+	movl %esp, %ebp
+	popl %ebp
+	ret
+
+ENTRY(get_ebp)
+	movl %ebp, %eax
+	ret
+
+
+ENTRY(set_esp)
+	movl 4(%esp), %esp
+	popl %ebp
+	ret
+
+
+
+
+
+
+
+
+
 
