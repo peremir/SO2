@@ -10,6 +10,7 @@ struct list_head  freequeue;
 struct list_head readyqueue;
 
 struct task_struct * idle_task;
+struct task_struct * init_task;
 
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
@@ -51,7 +52,7 @@ int allocate_DIR(struct task_struct *t)
 void cpu_idle(void)
 {
 	__asm__ __volatile__("sti": : :"memory");
-
+	printk("funca");
 	while(1)
 	{
 	;
@@ -99,7 +100,7 @@ void init_task1(void) // task1 = INIT
   set_cr3(get_DIR(&(pcb->task)));
 
 
- 
+  init_task = (struct task_struct*)pcb; 
 }
 
 void inner_task_switch(union task_union * new) {
@@ -110,7 +111,7 @@ void inner_task_switch(union task_union * new) {
 	DWord ebp = get_ebp();
 	current()->kernel_esp = ebp;
 
-	set_esp(new->task.kernel_esp);
+	set_esp(&(new->task.kernel_esp));
 
 
 }
