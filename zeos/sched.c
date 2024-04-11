@@ -53,7 +53,7 @@ void cpu_idle(void)
 {
 	__asm__ __volatile__("sti": : :"memory");
 	printk("funca");
-	while(1)
+	while(1) 
 	{
 	;
 	}
@@ -104,14 +104,14 @@ void init_task1(void) // task1 = INIT
 }
 
 void inner_task_switch(union task_union * new) {
-	tss.esp0 = (DWord)new->task.kernel_esp;
+	tss.esp0 = KERNEL_ESP(new);
 	writeMSR(0x175, tss.esp0);
 	
 	set_cr3(get_DIR(&(new->task)));
 	DWord ebp = get_ebp();
 	current()->kernel_esp = ebp;
 
-	set_esp(&(new->task.kernel_esp));
+	set_esp((struct task_struct *)new->task.kernel_esp);
 
 
 }
@@ -121,7 +121,7 @@ void init_sched()
   INIT_LIST_HEAD(&freequeue);
   INIT_LIST_HEAD(&readyqueue);
   	for (int i = 0; i < NR_TASKS; i++) {
-		list_add_tail(&(task[i].task),&freequeue);
+		list_add_tail(&(task[i].task.list),&freequeue);
 	}
 }
 
