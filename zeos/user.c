@@ -38,7 +38,7 @@ int __attribute__ ((__section__(".text.main")))
   write(1, buffer, 6);
 
   /* Funcio que provoca un page fault exception */
-  pf(); 
+  //pf(); 
 
   while(1) { }
 }

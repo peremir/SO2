@@ -9,6 +9,8 @@
 struct list_head  freequeue;
 struct list_head readyqueue;
 
+struct task_struct * idle_task;
+
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
 
@@ -21,7 +23,6 @@ struct task_struct *list_head_to_task_struct(struct list_head *l)
 
 extern struct list_head blocked;
 
-
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 
 {
@@ -33,7 +34,6 @@ page_table_entry * get_PT (struct task_struct *t)
 {
 	return (page_table_entry *)(((unsigned int)(t->dir_pages_baseAddr->bits.pbase_addr))<<12);
 }
-
 
 int allocate_DIR(struct task_struct *t) 
 {
@@ -58,30 +58,48 @@ void cpu_idle(void)
 
 void init_idle (void) 
 {
-  // 1) Get an available task_union from the freequeue 
-  //  to contain the characteristics of this process.
   struct list_head *free = list_first(&freequeue);
   list_del(free);
   union task_union *pcb = (union task_union*)list_head_to_task_struct(free);
   
-  //2) Assign PID 0 to the process. 
   pcb->task.PID = 0; 
-  
-  // 3) Initialize field dir_pages_baseAaddr with a new directory 
-  //  to store the process address space using the allocate_DIR routine.
   allocate_DIR(&(pcb->task));
+  //init_stats
+
+  pcb->stack[KERNEL_STACK_SIZE - 1] = (unsigned long)cpu_idle;
+  pcb->stack[KERNEL_STACK_SIZE - 2] = 0;
+  pcb->task.kernel_esp = &(pcb->stack[KERNEL_STACK_SIZE - 2]);
+  
+  idle_task = (struct task_struct*)pcb;
 }
 
 void init_task1(void) // task1 = INIT
 {
+  struct list_head *free = list_first(&freequeue);
+  list_del(free);
+  union task_union *pcb = (union task_union*)list_head_to_task_struct(free);
 
+  pcb->task.PID = 0;
+  allocate_DIR(&(pcb->task));
+  //init_stats
+  
+  set_user_pages(&(pcb->task));
+  pcb->task.kernel_esp = &(pcb->stack[KERNEL_STACK_SIZE]);
+
+  tss.esp0 = (DWord)pcb->task.kernel_esp;
+  writeMSR(0x175, tss.esp0);
+  set_cr3(get_DIR(&(pcb->task)));
 }
-
 
 void init_sched()
 {
   INIT_LIST_HEAD(&freequeue);
   INIT_LIST_HEAD(&readyqueue);
+
+  for (int i = 0; i < NR_TASKS; ++i)
+    {
+      list_add_tail(&(task[i].task.list), &freequeue);
+    }
 }
 
 struct task_struct* current()
@@ -95,3 +113,10 @@ struct task_struct* current()
   return (struct task_struct*)(ret_value&0xfffff000);
 }
 
+void inner_task_switch (union task_union *t)
+{
+  tss.esp0 = (DWord)t->task.kernel_esp;
+  writeMSR(0x175, tss.esp0);
+  set_cr3(get_DIR(&(t->task)));
+  current()->kernel_esp = get_ebp();
+}

@@ -141,3 +141,23 @@ ENTRY(page_fault_exception_handler)
 	//add $4, %esp
 	iret
 
+ENTRY(task_switch)
+	push %ebp
+	movl %esp, %ebp
+	push %esi
+	push %edi
+	push %ebx
+	push 8(%ebp)
+	call inner_task_switch
+	addl $4, %esp
+	popl %ebx
+	popl %edi
+	popl %esi
+	leave
+	ret
+
+ENTRY(get_ebp)
+	movl %ebp, %eax
+	ret
+
+
