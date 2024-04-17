@@ -7,6 +7,7 @@ int pid;
 int addAsm(int par1, int par2);
 int write(int fd, char * buffer, int size);
 unsigned int gettime();
+int getpid();
 
 void pf()
 {
@@ -32,10 +33,36 @@ int __attribute__ ((__section__(".text.main")))
   
   //Test de la syscall gettime feta amb sysenter
   char *buffer = "\0\0\0\0\0";
-  
   write(1, "\nGettime 1: ", 12);
   itoa(gettime(), buffer);
   write(1, buffer, 6);
+  
+  //Test de la syscall getpid feta amb sysenter 
+  char *buffer2 = "\0\0\0\0\0";
+  write(1, "\nGetpid: ", 9); 
+  itoa(getpid(), buffer2);
+  write(1, buffer2, 6);
+  
+  //Test de la syscall fork feta amb sysenter
+  int pid = fork();
+  if (pid == 0)
+  {
+    char *bufferC = "\0\0\0\0\0";
+    write(1, "\nCHILD Getpid: ", 15);
+    itoa(getpid(), bufferC);
+    write(1, bufferC, 6);
+  }
+  else if(pid > 0)
+  {
+    char *bufferP = "\0\0\0\0\0";
+    write(1, "\nPARENT Getpid: ", 16);
+    itoa(getpid(), bufferP);
+    write(1, bufferP, 6);
+  }
+  else
+  {
+    write(1, "\nERROR", 6);
+  }
 
   /* Funcio que provoca un page fault exception */
   //pf(); 

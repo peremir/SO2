@@ -71,13 +71,45 @@ int sys_getpid()
   return current()->PID;
 }
 
+int ret_from_fork() {
+    return 0;
+}
+
 int sys_fork()
 {
-  int PID=-1;
+  //int PID=-1;
 
   // creates the child process
+  if (list_empty(&freequeue))
+  {
+    return -ENOMEM; /* Out of memory */
+  }
+
+  struct list_head *free = list_first(&freequeue);
+  list_del(free);
+  union task_union *pcb = (union task_union*)list_head_to_task_struct(free);
   
-  return PID;
+  copy_data(current(), pcb, sizeof(union task_union));
+  allocate_DIR((struct task_struct*)pcb); 
+  //init stats
+  
+  ((struct task_struct*)pcb)->kernel_esp = &(pcb->stack[KERNEL_STACK_SIZE-19]);
+  pcb->stack[KERNEL_STACK_SIZE-19] = 0;
+  pcb->stack[KERNEL_STACK_SIZE-18] = (DWord)ret_from_fork;
+
+  if ((copy_and_allocate_pages(current(), pcb)) < 0) 
+  {
+    list_add_tail(free, &freequeue);
+    return -ENOMEM;
+  }
+
+  list_add_tail(free, &readyqueue);
+
+  ((struct task_struct*)pcb)->PID = ++pids;
+  
+  task_switch(pcb);
+
+  return ((struct task_struct*)pcb)->PID;
 }
 
 void sys_exit()

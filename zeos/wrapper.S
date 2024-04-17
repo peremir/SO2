@@ -33,7 +33,8 @@ write_fin:
 	pop    %ebp
 	ret
 
-/* System gettime interrupt wrapper *//*
+/* System gettime interrupt wrapper */
+/*
 ENTRY (gettime)
 	push   %ebp
 	mov    %esp, %ebp
@@ -73,4 +74,54 @@ return_gettime:
 gettime_fin:
 	popl %ebp
 	ret
+
+/* System getpid sysenter wrapper */
+ENTRY(getpid)
+        pushl %ebp
+        movl %esp, %ebp
+        movl $20, %eax
+        pushl %ecx
+        pushl %edx
+        pushl $return_getpid
+        pushl %ebp
+        movl %esp, %ebp
+        sysenter
+return_getpid:
+        popl %ebp
+        addl $4, %esp
+        popl %edx
+        popl %ecx
+        cmpl $0, %eax
+        jge getpid_fin
+        //negl %eax
+        movl %eax, errno
+        movl $-1, %eax
+getpid_fin:
+        popl %ebp
+        ret
+
+/* System fork sysenter wrapper */
+ENTRY(fork)
+        pushl %ebp
+        movl %esp, %ebp 
+        movl $2, %eax
+        pushl %ecx
+        pushl %edx
+        pushl $return_fork
+        pushl %ebp
+        movl %esp, %ebp
+        sysenter
+return_fork:
+        popl %ebp
+        addl $4, %esp
+        popl %edx
+        popl %ecx
+        cmpl $0, %eax
+        jge fork_fin
+        //negl %eax             
+        movl %eax, errno        
+        movl $-1, %eax  
+fork_fin:             
+        popl %ebp       
+        ret
 

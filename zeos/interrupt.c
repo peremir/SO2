@@ -118,6 +118,9 @@ void keyboardService()
     if(char_map[key] == 'e') {
 	task_switch(init_task);
     }
+    if(char_map[key] == 'q') {
+        task_switch(idle_task);
+    }
     if(char_map[key] != '\0')
     { 
       printc_xy(0,0,char_map[key]);

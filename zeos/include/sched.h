@@ -19,7 +19,6 @@ struct task_struct {
   struct list_head list;
   DWord *kernel_esp;
   page_table_entry * dir_pages_baseAddr;
-  DWord *kernel_esp;
 };
 
 union task_union {
@@ -38,6 +37,8 @@ extern struct task_struct *init_task;
 #define INITIAL_ESP       	KERNEL_ESP(&task[1])
 
 void inner_task_switch (union task_union *t);
+
+extern int pids;
 
 /* Inicialitza les dades del proces inicial */
 void init_task1(void);
