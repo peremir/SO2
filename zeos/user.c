@@ -9,6 +9,11 @@ int write(int fd, char * buffer, int size);
 unsigned int gettime();
 int getpid();
 
+void print(char *buffer)
+{
+  write(1, buffer, strlen(buffer));
+}
+
 void pf()
 {
   char *p = 0;
@@ -30,10 +35,11 @@ int __attribute__ ((__section__(".text.main")))
   
   /* Crida syscall write per escriure per pantalla com a usuari */
   if(write(1,"\nsyscall write funcionant :)",strlen("\nsyscall write funcionant :)")) < 0) perror();
-  
+  print(" TEST PRINT");
+
   //Test de la syscall gettime feta amb sysenter
   char *buffer = "\0\0\0\0\0";
-  write(1, "\nGettime 1: ", 12);
+  write(1, "\nGettime: ", 10);
   itoa(gettime(), buffer);
   write(1, buffer, 6);
   
@@ -42,15 +48,17 @@ int __attribute__ ((__section__(".text.main")))
   write(1, "\nGetpid: ", 9); 
   itoa(getpid(), buffer2);
   write(1, buffer2, 6);
-  
+   
   //Test de la syscall fork feta amb sysenter
   int pid = fork();
   if (pid == 0)
-  {
+  { 
     char *bufferC = "\0\0\0\0\0";
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
     write(1, bufferC, 6);
+
+    exit();
   }
   else if(pid > 0)
   {

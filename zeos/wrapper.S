@@ -125,3 +125,17 @@ fork_fin:
         popl %ebp       
         ret
 
+ENTRY(exit)
+	pushl %ebp
+    	movl %esp, %ebp
+    	movl $1, %eax // id de la syscall exit() -> 1
+    	pushl $exit_return_user // @ a la que sysenter debe devolver
+   	pushl %ebp              // el ebp actual, que debera usarse al volver
+    	movl %esp, %ebp
+    	sysenter                // saltamos a la primera entrada de la sys_call_table
+exit_return_user:
+   	popl %ebp
+    	add $4, %esp // pop of return address.
+    	leave
+    	ret
+

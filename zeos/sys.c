@@ -18,6 +18,7 @@
 #define LECTURA 0
 #define ESCRIPTURA 1
 
+int quantum_left;
 
 extern unsigned int zeos_ticks;
 
@@ -91,7 +92,7 @@ int sys_fork()
   
   copy_data(current(), pcb, sizeof(union task_union));
   allocate_DIR((struct task_struct*)pcb); 
-  //init stats
+  init_stats(pcb);
   
   ((struct task_struct*)pcb)->kernel_esp = &(pcb->stack[KERNEL_STACK_SIZE-19]);
   pcb->stack[KERNEL_STACK_SIZE-19] = 0;
@@ -106,15 +107,25 @@ int sys_fork()
   list_add_tail(free, &readyqueue);
 
   ((struct task_struct*)pcb)->PID = ++pids;
-  
-  task_switch(pcb);
 
   return ((struct task_struct*)pcb)->PID;
 }
 
 void sys_exit()
 {
-	
+  /*
+	page_table_entry *pt = get_PT(current());
+	for (int i = 0; i < NUM_PAG_DATA; ++i) {
+		free_frame(get_frame(pt, PAG_LOG_INIT_DATA + i));
+		del_ss_pag(pt, PAG_LOG_INIT_DATA + i);
+	}
+        list_add_tail(&current()->list, &freequeue);
+        sched_next_rr(); */
+	free_user_pages(current());
+
+    update_process_state_rr(current(), &freequeue);
+
+    sched_next_rr();
 }
 
 
