@@ -117,7 +117,12 @@ void keyboardService()
     if(char_map[key] == 't') {
 	task_switch(current());
     }
-
+    if(char_map[key] == 'c') {
+	task_switch(child_task);
+    }
+    if(char_map[key] == 'p') {
+	task_switch(parent_task);
+    }
     if(char_map[key] != '\0')
     { 
       printc_xy(0,0,char_map[key]);

@@ -8,9 +8,12 @@
 #include <list.h>
 #include <types.h>
 #include <mm_address.h>
+#include <stats.h>
 
 #define NR_TASKS      10
 #define KERNEL_STACK_SIZE	1024
+
+#define DEFAULT_QUANTUM  10
 
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
@@ -19,6 +22,9 @@ struct task_struct {
   struct list_head list;
   page_table_entry * dir_pages_baseAddr;
   DWord *kernel_esp;
+  int quantum;
+  enum state_t state;
+  struct stats stats;
 };
 
 union task_union {
@@ -32,6 +38,11 @@ extern struct list_head freequeue;
 extern struct list_head readyqueue;
 extern struct task_struct *idle_task;
 extern struct task_struct *init_task;
+extern struct task_struct *child_task;
+extern struct task_struct *parent_task;
+
+extern int quantum_left;
+
 
 extern int pids;
 

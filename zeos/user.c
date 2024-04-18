@@ -7,6 +7,12 @@ int pid;
 int addAsm(int par1, int par2);
 int write(int fd, char * buffer, int size);
 unsigned int gettime();
+int getpid();
+
+void print(char *buffer){
+	write(1, buffer, strlen(buffer));
+}
+
 
 void pf()
 {
@@ -34,11 +40,22 @@ int __attribute__ ((__section__(".text.main")))
  // itoa(getpid(), buffer);
  // write(1,buffer,6);
   
-  int pid = fork();
-  char *buffer = "\0\0\0\0\0\n";
-  itoa(pid, buffer);
-  write(1,buffer,6);
 
+  char *buffer = "\0\0\0\0\0\n";
+  int pid = fork();
+  if (pid == 0) {
+	itoa(pid, buffer);
+	print("\nChild = ");
+  	print(buffer);
+  }
+  else if (pid > 0){
+	itoa(pid, buffer);
+	print("\nParent = ");
+	print(buffer);
+  }
+  else {
+	print("ERROR NOSEK\n");
+  }
 
 
   //Test de la syscall gettime feta amb sysenter

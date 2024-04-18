@@ -18,8 +18,12 @@
 #define LECTURA 0
 #define ESCRIPTURA 1
 
+struct task_struct *child_task;
+struct task_struct *parent_task;
 
 extern unsigned int zeos_ticks;
+int quantum_left;
+
 
 int check_fd(int fd, int permissions)
 {
@@ -93,7 +97,7 @@ int sys_fork()
   //como se ha copiado todo exactamente igual del padre al hijo, 
   //hay que asignarle otro directorio de páginas lógicas
   allocate_DIR(&(pcb->task));
-
+  init_stats(pcb);
 /*
 pag_i < 256
   set_ss_pag(hijo, pag_i, get_frame(padre,pag_i))
@@ -142,8 +146,11 @@ pag_i < 256
   pcb->task.PID = pids;
   pids++;
 
-  list_add_tail(free, &readyqueue);
 
+  child_task = (struct task_struct*)pcb;
+  parent_task = current();
+
+  list_add_tail(free, &readyqueue);
   return pcb->task.PID;
 }
 

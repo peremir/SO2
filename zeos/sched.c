@@ -9,8 +9,10 @@
 struct list_head  freequeue;
 struct list_head readyqueue;
 
+
 struct task_struct * idle_task;
 struct task_struct * init_task;
+extern int quantum_left;
 
 int pids;
 
@@ -67,6 +69,16 @@ void cpu_idle(void)
 	}
 }
 
+void init_stats(struct task_struct *t) {
+    t->stats.user_ticks = 0;
+    t->stats.system_ticks = 0;
+    t->stats.ready_ticks = 0;
+    t->stats.blocked_ticks = 0;
+    t->stats.elapsed_total_ticks = get_ticks();
+    t->stats.total_trans = 0;
+    t->stats.remaining_ticks = 0;
+}
+
 void init_idle (void) 
 {
   // 1) Get an available task_union from the freequeue 
@@ -78,6 +90,9 @@ void init_idle (void)
   //2) Assign PID 0 to the process. 
   pcb->task.PID = 0; 
   pids++; 
+  pcb->task.quantum = DEFAULT_QUANTUM;
+  init_stats((struct task_struct*)pcb);
+
   // 3) Initialize field dir_pages_baseAaddr with a new d:irectory 
   //  to store the process address space using the allocate_DIR routine.
   allocate_DIR(&(pcb->task));
@@ -98,7 +113,9 @@ void init_task1(void) // task1 = INIT
   pcb->task.PID = 1; 
   pids++;
   allocate_DIR(&(pcb->task));
-
+  pcb->task.quantum = DEFAULT_QUANTUM;
+  quantum_left = pcb->task.quantum;
+  init_stats((struct task_struct*)pcb);
   set_user_pages(&pcb->task);
 
   pcb->task.kernel_esp = &(pcb->stack[KERNEL_STACK_SIZE]);
@@ -122,6 +139,37 @@ void inner_task_switch(union task_union * new) {
 	set_esp((struct task_struct *)new->task.kernel_esp);
 
 
+}
+
+void update_sched_data_rr() {
+	--quantum_left;
+}
+
+int needs_sched_rr() {
+	if ((quantum_left <= 0) && !list_empty(&readyqueue)) return 1;
+	if ((quantum_left <= 0)) quantum_left = current()->quantum;
+	return 0;
+}
+
+void update_process_state_rr(struct task_struct *t, struct list_head *dst_queue) {
+	if (t != current() && t != idle_task) list_del(&t->list);
+    	if (dst_queue != NULL) list_add_tail(&t->list, dst_queue);
+}
+
+
+
+
+void sched_next_rr() {
+    struct task_struct *next_task;
+
+    if (list_empty(&readyqueue)) 
+        next_task = idle_task;
+    else
+        next_task = list_head_to_task_struct(list_first(&readyqueue));
+
+    update_process_state_rr(next_task, NULL);
+
+    task_switch((union task_union*)next_task);
 }
 
 void init_sched()
