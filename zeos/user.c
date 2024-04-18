@@ -29,7 +29,18 @@ int __attribute__ ((__section__(".text.main")))
   
   /* Crida syscall write per escriure per pantalla com a usuari */
   if(write(1,"\nsyscall write funcionant :)",strlen("\nsyscall write funcionant :)")) < 0) perror();
+
+ // char *buffer = "\0\0\0\0\0\n";
+ // itoa(getpid(), buffer);
+ // write(1,buffer,6);
   
+  int pid = fork();
+  char *buffer = "\0\0\0\0\0\n";
+  itoa(pid, buffer);
+  write(1,buffer,6);
+
+
+
   //Test de la syscall gettime feta amb sysenter
 	//char *buffer = "\0\0\0\0\0\n";
 

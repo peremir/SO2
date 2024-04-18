@@ -12,6 +12,8 @@ struct list_head readyqueue;
 struct task_struct * idle_task;
 struct task_struct * init_task;
 
+int pids;
+
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
 
@@ -53,6 +55,12 @@ void cpu_idle(void)
 {
 	__asm__ __volatile__("sti": : :"memory");
 	printk("funca");
+
+	char *buffer = "\0\0\0\0\0\n";
+  	itoa(current()->PID, buffer);
+	printk(buffer);
+
+
 	while(1) 
 	{
 	;
@@ -69,7 +77,7 @@ void init_idle (void)
   
   //2) Assign PID 0 to the process. 
   pcb->task.PID = 0; 
-  
+  pids++; 
   // 3) Initialize field dir_pages_baseAaddr with a new d:irectory 
   //  to store the process address space using the allocate_DIR routine.
   allocate_DIR(&(pcb->task));
@@ -88,7 +96,7 @@ void init_task1(void) // task1 = INIT
   union task_union *pcb = (union task_union*)list_head_to_task_struct(free);
 
   pcb->task.PID = 1; 
-  
+  pids++;
   allocate_DIR(&(pcb->task));
 
   set_user_pages(&pcb->task);
@@ -118,6 +126,7 @@ void inner_task_switch(union task_union * new) {
 
 void init_sched()
 {
+  pids = 0;
   INIT_LIST_HEAD(&freequeue);
   INIT_LIST_HEAD(&readyqueue);
   	for (int i = 0; i < NR_TASKS; i++) {

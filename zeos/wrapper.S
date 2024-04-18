@@ -48,6 +48,34 @@ gettime_fin:
 
 
 
+ENTRY(getpid)
+	push 	%ebp
+	mov	%esp, %ebp
+	mov 	$20, %eax
+	int 	$0x80
+	cmpl	$0, %eax
+	jge	getpid_fin
+	movl	%eax, errno
+	mov	$-1, %eax
+getpid_fin:
+	pop	%ebp
+	ret
+
+ENTRY(fork)
+	push 	%ebp
+	mov	%esp, %ebp
+	mov 	$2, %eax
+	int 	$0x80
+	cmpl	$0, %eax
+	jge	getpid_fin
+	movl	%eax, errno
+	mov	$-1, %eax
+fork_fin:
+	pop	%ebp
+	ret
+
+
+
 /*
 ENTRY(gettime)
 	pushl %ebp
@@ -73,4 +101,5 @@ gettime_fin:
 	popl %ebp
 	ret
 */
+
 
