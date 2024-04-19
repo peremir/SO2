@@ -7,8 +7,7 @@
 ENTRY(addAsm)
 	push   %ebp
 	mov    %esp,%ebp
-	mov    ebp
-	0x8(%ebp),%edx
+	mov    0x8(%ebp),%edx
 	mov    0xc(%ebp),%eax
 	add    %edx,%eax
 	pop    %ebp
@@ -41,15 +40,15 @@ ENTRY (gettime)
 	pushl %edx
 	pushl $return_gettime
 	pushl %ebp
-	movl%esp, %ebp
+	movl %esp, %ebp
 	sysenter
 return_gettime:
-	popl %ebp
-	addl $4, %esp
-	popl %edx
-	popl %ecx
-	cmpl   $0, %eax
-	jge    gettime_fin
+	popl 	%ebp
+	addl	$4, %esp
+	popl 	%edx
+	popl 	%ecx
+	cmpl   	$0, %eax
+	jge    	gettime_fin
 	//neg    %eax
 	movl   %eax, errno		// 4) Tractament d'errors - Save errno to eax
 	mov    $-1, %eax
@@ -67,7 +66,7 @@ ENTRY(getpid)
 	pushl %edx
 	pushl $return_getpid
 	pushl %ebp
-	movl%esp, %ebp
+	movl %esp, %ebp
 	sysenter
 return_getpid:
 	popl %ebp
@@ -90,7 +89,7 @@ ENTRY(fork)
 	pushl %edx
 	pushl $return_fork
 	pushl %ebp
-	movl%esp, %ebp
+	movl %esp, %ebp
 	sysenter
 return_fork:
 	popl %ebp
@@ -104,15 +103,16 @@ return_fork:
 fork_fin:
 	pop	%ebp
 	ret
+   
 
 ENTRY(exit)
-	push 	%ebp
-	mov	%esp, %ebp
-	mov 	$1, %eax
-	int 	$0x80
-	pop	%ebp
+	pushl %ebp
+	movl %esp, %ebp
+	movl $1, %eax
+	sysenter
+	popl %ebp
+	addl $4, %esp
 	ret
-
 
 
 

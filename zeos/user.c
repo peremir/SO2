@@ -36,11 +36,12 @@ int __attribute__ ((__section__(".text.main")))
   /* Crida syscall write per escriure per pantalla com a usuari */
   if(write(1,"\nsyscall write funcionant :)",strlen("\nsyscall write funcionant :)")) < 0) perror();
 
+  gettime();
  // char *buffer = "\0\0\0\0\0\n";
  // itoa(getpid(), buffer);
  // write(1,buffer,6);
   
-
+/*
   char *buffer = "\0\0\0\0\0\n";
   int pid = fork();
   if (pid == 0) {
@@ -57,7 +58,7 @@ int __attribute__ ((__section__(".text.main")))
 	print("ERROR NOSEK\n");
   }
 
-
+*/
   //Test de la syscall gettime feta amb sysenter
 	//char *buffer = "\0\0\0\0\0\n";
 
