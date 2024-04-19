@@ -102,7 +102,8 @@ void init_task1(void) // task1 = INIT
   init_task = (struct task_struct*)pcb; 
 }
 
-void inner_task_switch(union task_union * new) { 
+void inner_task_switch(union task_union * new) 
+{ 
   tss.esp0 = KERNEL_ESP(new);
   writeMSR(0x175, tss.esp0);
 	
@@ -114,7 +115,7 @@ void inner_task_switch(union task_union * new) {
 
 void init_sched()
 {
-  pids = 1;
+  pids = 2;
 
   INIT_LIST_HEAD(&freequeue);
   INIT_LIST_HEAD(&readyqueue);
@@ -147,11 +148,13 @@ void init_stats(struct task_struct *t)
     t->stats.remaining_ticks = 0;
 }
 
-int get_quantum(struct task_struct *t) {
+int get_quantum(struct task_struct *t) 
+{
     return t->quantum;
 }
 
-void set_quantum(struct task_struct *t, int new_quantum) {
+void set_quantum(struct task_struct *t, int new_quantum) 
+{
     t->quantum = new_quantum;
 }
 

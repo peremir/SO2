@@ -33,23 +33,6 @@ write_fin:
 	pop    %ebp
 	ret
 
-/* System gettime interrupt wrapper */
-/*
-ENTRY (gettime)
-	push   %ebp
-	mov    %esp, %ebp
-	mov    $10, %eax		// 2) Dir quin servei és
-	int    $0x80			// 3) INT
-	cmpl   $0, %eax
-	jge    gettime_fin
-	//neg    %eax
-	movl   %eax, errno		// 4) Tractament d'errors - Save errno to eax
-	mov    $-1, %eax
-gettime_fin:
-	pop    %ebp 
-	ret
-*/
-
 /* System gettime sysenter wrapper */
 ENTRY(gettime)
 	pushl %ebp

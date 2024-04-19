@@ -57,8 +57,6 @@ int __attribute__ ((__section__(".text.main")))
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
     write(1, bufferC, 6);
-
-    exit();
   }
   else if(pid > 0)
   {
@@ -71,7 +69,7 @@ int __attribute__ ((__section__(".text.main")))
   {
     write(1, "\nERROR", 6);
   }
-
+ 
   /* Funcio que provoca un page fault exception */
   //pf(); 
 
