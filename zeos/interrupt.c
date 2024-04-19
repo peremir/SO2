@@ -135,9 +135,20 @@ void keyboardService()
 }
 
 
+
+void schedule() {
+    update_sched_data_rr();
+    if (needs_sched_rr()) {
+        update_process_state_rr(current(), &readyqueue);
+        sched_next_rr();
+    }
+}
+
 void clockRoutine() {
 	zeos_ticks++;
-	zeos_show_clock();	
+	zeos_show_clock();
+
+	schedule();
 }
 
 

@@ -156,7 +156,10 @@ pag_i < 256
 
 void sys_exit()
 {
-	
+	free_user_pages(current());
+    	update_process_state_rr(current(), &freequeue);
+    	sched_next_rr();
+	printk("MIAUMOAU");
 }
 
 

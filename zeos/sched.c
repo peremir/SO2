@@ -16,6 +16,15 @@ extern int quantum_left;
 
 int pids;
 
+int get_quantum(struct task_struct *t) {
+    return t->quantum;
+}
+
+void set_quantum(struct task_struct *t, int new_quantum) {
+    t->quantum = new_quantum;
+}
+
+
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
 

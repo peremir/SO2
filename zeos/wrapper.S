@@ -74,6 +74,16 @@ fork_fin:
 	pop	%ebp
 	ret
 
+ENTRY(exit)
+	push 	%ebp
+	mov	%esp, %ebp
+	mov 	$1, %eax
+	int 	$0x80
+	pop	%ebp
+	ret
+
+
+
 
 
 /*
