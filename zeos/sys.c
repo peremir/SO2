@@ -18,9 +18,6 @@
 #define LECTURA 0
 #define ESCRIPTURA 1
 
-struct task_struct *child_task;
-struct task_struct *parent_task;
-
 extern unsigned int zeos_ticks;
 int quantum_left;
 
@@ -146,10 +143,6 @@ pag_i < 256
   pcb->task.PID = pids;
   pids++;
 
-
-  child_task = (struct task_struct*)pcb;
-  parent_task = current();
-
   list_add_tail(free, &readyqueue);
   return pcb->task.PID;
 }
@@ -159,7 +152,6 @@ void sys_exit()
 	free_user_pages(current());
     	update_process_state_rr(current(), &freequeue);
     	sched_next_rr();
-	printk("MIAUMOAU");
 }
 
 

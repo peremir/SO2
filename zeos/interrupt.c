@@ -106,23 +106,7 @@ void keyboardService()
   unsigned char key = inb(0x60);
 
   if((key & 0x80) != 0x80)
-  {
-
-    if(char_map[key] == 'e') {
-	task_switch(init_task);
-    }
-    if(char_map[key] == 'q') {
-	task_switch(idle_task);
-    }
-    if(char_map[key] == 't') {
-	task_switch(current());
-    }
-    if(char_map[key] == 'c') {
-	task_switch(child_task);
-    }
-    if(char_map[key] == 'p') {
-	task_switch(parent_task);
-    }
+  { 
     if(char_map[key] != '\0')
     { 
       printc_xy(0,0,char_map[key]);

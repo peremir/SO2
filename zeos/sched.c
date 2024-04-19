@@ -11,7 +11,6 @@ struct list_head readyqueue;
 
 
 struct task_struct * idle_task;
-struct task_struct * init_task;
 extern int quantum_left;
 
 int pids;
@@ -132,9 +131,6 @@ void init_task1(void) // task1 = INIT
   writeMSR(0x175, tss.esp0);
 
   set_cr3(get_DIR(&(pcb->task)));
-
-
-  init_task = (struct task_struct*)pcb; 
 }
 
 void inner_task_switch(union task_union * new) {
