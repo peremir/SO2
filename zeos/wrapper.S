@@ -7,7 +7,8 @@
 ENTRY(addAsm)
 	push   %ebp
 	mov    %esp,%ebp
-	mov    0x8(%ebp),%edx
+	mov    ebp
+	0x8(%ebp),%edx
 	mov    0xc(%ebp),%eax
 	add    %edx,%eax
 	pop    %ebp
@@ -36,7 +37,17 @@ ENTRY (gettime)
 	push   %ebp
 	mov    %esp, %ebp
 	mov    $10, %eax		// 2) Dir quin servei és
-	int    $0x80			// 3) INT
+	pushl %ecx
+	pushl %edx
+	pushl $return_gettime
+	pushl %ebp
+	movl%esp, %ebp
+	sysenter
+return_gettime:
+	popl %ebp
+	addl $4, %esp
+	popl %edx
+	popl %ecx
 	cmpl   $0, %eax
 	jge    gettime_fin
 	//neg    %eax
@@ -52,7 +63,17 @@ ENTRY(getpid)
 	push 	%ebp
 	mov	%esp, %ebp
 	mov 	$20, %eax
-	int 	$0x80
+	pushl %ecx
+	pushl %edx
+	pushl $return_getpid
+	pushl %ebp
+	movl%esp, %ebp
+	sysenter
+return_getpid:
+	popl %ebp
+	addl $4, %esp
+	popl %edx
+	popl %ecx
 	cmpl	$0, %eax
 	jge	getpid_fin
 	movl	%eax, errno
@@ -65,9 +86,19 @@ ENTRY(fork)
 	push 	%ebp
 	mov	%esp, %ebp
 	mov 	$2, %eax
-	int 	$0x80
+	pushl %ecx
+	pushl %edx
+	pushl $return_fork
+	pushl %ebp
+	movl%esp, %ebp
+	sysenter
+return_fork:
+	popl %ebp
+	addl $4, %esp
+	popl %edx
+	popl %ecx
 	cmpl	$0, %eax
-	jge	getpid_fin
+	jge	fork_fin
 	movl	%eax, errno
 	mov	$-1, %eax
 fork_fin:
