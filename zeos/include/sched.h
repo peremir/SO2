@@ -23,8 +23,6 @@ struct task_struct {
   DWord *kernel_esp;
   page_table_entry * dir_pages_baseAddr;
   int quantum;
-  enum state_t state;
-  struct stats stats;
 };
 
 union task_union {
@@ -41,6 +39,7 @@ extern int quantum_left;
 
 
 extern int pids;
+extern pending_unblocks;
 
 #define KERNEL_ESP(t)       	(DWord) &(t)->stack[KERNEL_STACK_SIZE]
 

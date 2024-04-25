@@ -18,8 +18,6 @@
 #define LECTURA 0
 #define ESCRIPTURA 1
 
-int quantum_left;
-
 extern unsigned int zeos_ticks;
 int quantum_left;
 
@@ -170,6 +168,42 @@ void sys_exit()
   update_process_state_rr(current(), &freequeue);
   sched_next_rr();
 }
+
+
+void sys_block() {
+	if (pending_unblocks > 0) {
+		pending_unglocks--;	
+	}
+	else {	
+		struct list_head* list = current()->list;
+		list_del(list);
+		list_add_tail(list, &blocked);
+	}
+}
+
+void sys_unblock(int pid) {
+	/*
+	 * if ((pid is current()->child) && process_pid is blocked) {
+	 *	desbloquejar (readyqueue nosek);
+	 *	return 0;
+	 * }
+	 * if (process_pid is NOT blocked) {
+	 *	pending_unblocks++;
+	 * 	return 0;
+	 * }
+	 * 
+	 * return -1;
+	 *
+	 *
+	 *
+	 * */	
+}
+
+
+
+
+
+
 
 
 
