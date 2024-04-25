@@ -22,6 +22,9 @@ struct task_struct {
   DWord *kernel_esp;
   page_table_entry * dir_pages_baseAddr;
   int quantum;
+  struct list_head child_list;
+  struct list_head bro;
+  struct task_struct *parent;
 };
 
 union task_union {
@@ -33,6 +36,8 @@ extern union task_union task[NR_TASKS]; /* Vector de tasques */
 
 extern struct list_head freequeue;
 extern struct list_head readyqueue;
+extern struct task_struct * idle_task;
+
 
 extern int quantum_left;
 

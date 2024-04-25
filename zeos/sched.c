@@ -14,6 +14,7 @@ extern struct list_head blocked;
 struct task_struct * idle_task;
 extern int quantum_left;
 
+
 int pids;
 
 union task_union task[NR_TASKS]
@@ -73,6 +74,7 @@ void init_idle (void)
   
   pcb->task.PID = 0; 
   allocate_DIR(&(pcb->task));
+  INIT_LIST_HEAD(&(pcb->task.child_list));
 
   pcb->stack[KERNEL_STACK_SIZE - 1] = (unsigned long)cpu_idle;
   pcb->stack[KERNEL_STACK_SIZE - 2] = 0;
@@ -90,8 +92,9 @@ void init_task1(void) // task1 = INIT
   pcb->task.PID = 1; 
   allocate_DIR(&(pcb->task));
   set_user_pages(&(pcb->task));
-
-  pcb->task.PID = 1;
+  pcb->task.parent = pcb;  
+  INIT_LIST_HEAD(&(pcb->task.child_list));
+  
   pcb->task.quantum = DEFAULT_QUANTUM;
   quantum_left = pcb->task.quantum;
 

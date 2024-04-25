@@ -128,11 +128,11 @@ ENTRY(block)
         pushl %ebp
         movl %esp, %ebp
         movl $25, %eax 
-        pushl $exit_return_user // @ a la que sysenter debe devolver
+        pushl $block_return_user // @ a la que sysenter debe devolver
         pushl %ebp              // el ebp actual, que debera usarse al volver
         movl %esp, %ebp
         sysenter                // saltamos a la primera entrada de la sys_call_table
-exit_return_user:
+block_return_user:
         popl %ebp
         add $4, %esp // pop of return address.
         leave
@@ -144,11 +144,11 @@ ENTRY(unblock)
         movl %esp, %ebp
         movl $26, %eax
 	pushl %ebx 
-        pushl $exit_return_user // @ a la que sysenter debe devolver
+        pushl $unblock_return_user // @ a la que sysenter debe devolver
         pushl %ebp              // el ebp actual, que debera usarse al volver
         movl %esp, %ebp
         sysenter                // saltamos a la primera entrada de la sys_call_table
-exit_return_user:
+unblock_return_user:
         popl %ebp
         add $4, %esp // pop of return address.
         leave

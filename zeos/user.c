@@ -54,6 +54,7 @@ int __attribute__ ((__section__(".text.main")))
   if (pid == 0)
   { 
     char *bufferC = "\0\0\0\0\0";
+		block();
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
     write(1, bufferC, 6);
