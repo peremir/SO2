@@ -8,6 +8,7 @@
 
 struct list_head  freequeue;
 struct list_head readyqueue;
+extern struct list_head blocked;
 
 
 struct task_struct * idle_task;
@@ -25,11 +26,10 @@ struct task_struct *list_head_to_task_struct(struct list_head *l)
 }
 #endif
 
-extern struct list_head blocked;
-
 int pids;
 int pending_unblocks;
 extern int quantum_left;
+int pending_unblocks;
 
 
 /* get_DIR - Returns the Page Directory address for task 't' */
@@ -119,6 +119,7 @@ void init_sched()
 {
   pids = 2;
   pending_unblocks = 0;
+
   INIT_LIST_HEAD(&freequeue);
   INIT_LIST_HEAD(&readyqueue);
 
@@ -137,8 +138,6 @@ struct task_struct* current()
   );
   return (struct task_struct*)(ret_value&0xfffff000);
 }
-
-
 
 int get_quantum(struct task_struct *t) 
 {

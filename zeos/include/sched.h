@@ -8,7 +8,6 @@
 #include <list.h>
 #include <types.h>
 #include <mm_address.h>
-#include <stats.h>
 
 #define NR_TASKS      10
 #define KERNEL_STACK_SIZE	1024
@@ -49,8 +48,7 @@ void inner_task_switch (union task_union *t);
 
 extern int pids;
 extern int quantum_left;
-
-void init_stats(struct task_struct *t);
+extern int pending_unblocks;
 
 /* Inicialitza les dades del proces inicial */
 void init_task1(void);
