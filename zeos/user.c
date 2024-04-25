@@ -41,7 +41,7 @@ int __attribute__ ((__section__(".text.main")))
  // itoa(getpid(), buffer);
  // write(1,buffer,6);
   
-/*
+
   char *buffer = "\0\0\0\0\0\n";
   int pid = fork();
   if (pid == 0) {
@@ -58,7 +58,6 @@ int __attribute__ ((__section__(".text.main")))
 	print("ERROR NOSEK\n");
   }
 
-*/
   //Test de la syscall gettime feta amb sysenter
 	//char *buffer = "\0\0\0\0\0\n";
 

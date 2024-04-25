@@ -17,6 +17,7 @@ unsigned int zeos_ticks = 0;
 void keyboardHandler();
 void clockHandler();
 void system_call_handler();
+void syscall_handler_sysenter();
 void page_fault_exception_handler();
 
 char char_map[] =
@@ -90,6 +91,12 @@ idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
 set_handlers();
 
 /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
+
+writeMSR(0x174, __KERNEL_CS);
+writeMSR(0x175, INITIAL_ESP);
+writeMSR(0x176, (int)syscall_handler_sysenter);
+
+
 setInterruptHandler(33, keyboardHandler, 0);  /* Keyboard interrupt */
 setInterruptHandler(32, clockHandler, 0); /* Clock interrupt */
 setInterruptHandler(14, page_fault_exception_handler, 0);
