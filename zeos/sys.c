@@ -100,7 +100,6 @@ int sys_fork()
   //como se ha copiado todo exactamente igual del padre al hijo, 
   //hay que asignarle otro directorio de páginas lógicas
   allocate_DIR(&(pcb->task));
-  init_stats(pcb);
   
   /*
   pag_i < 256
@@ -166,6 +165,16 @@ void sys_exit()
   free_user_pages(current());
   update_process_state_rr(current(), &freequeue);
   sched_next_rr();
+}
+
+void sys_block()
+{
+
+}
+
+void sys_unblock(int pid)
+{
+
 }
 
 

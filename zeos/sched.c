@@ -5,10 +5,10 @@
 #include <sched.h>
 #include <mm.h>
 #include <io.h>
-#include <stats.h>
 
 struct list_head  freequeue;
 struct list_head readyqueue;
+extern struct list_head blocked;
 
 struct task_struct * idle_task;
 struct task_struct * init_task;
@@ -23,10 +23,9 @@ struct task_struct *list_head_to_task_struct(struct list_head *l)
 }
 #endif
 
-extern struct list_head blocked;
-
 int pids;
 extern int quantum_left;
+int pending_unblocks;
 
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 
@@ -69,7 +68,6 @@ void init_idle (void)
   
   pcb->task.PID = 0; 
   allocate_DIR(&(pcb->task));
-  init_stats(pcb);
 
   pcb->stack[KERNEL_STACK_SIZE - 1] = (unsigned long)cpu_idle;
   pcb->stack[KERNEL_STACK_SIZE - 2] = 0;
@@ -87,7 +85,6 @@ void init_task1(void) // task1 = INIT
   pcb->task.PID = 1; 
   allocate_DIR(&(pcb->task));
   set_user_pages(&(pcb->task));
-  init_stats(pcb);
 
   pcb->task.PID = 1;
   pcb->task.quantum = DEFAULT_QUANTUM;
@@ -116,6 +113,7 @@ void inner_task_switch(union task_union * new)
 void init_sched()
 {
   pids = 2;
+  pending_unblocks = 0;
 
   INIT_LIST_HEAD(&freequeue);
   INIT_LIST_HEAD(&readyqueue);
@@ -134,18 +132,6 @@ struct task_struct* current()
 	: "=g" (ret_value)
   );
   return (struct task_struct*)(ret_value&0xfffff000);
-}
-
-
-void init_stats(struct task_struct *t) 
-{
-    t->stats.user_ticks = 0;
-    t->stats.system_ticks = 0;
-    t->stats.ready_ticks = 0;
-    t->stats.blocked_ticks = 0;
-    t->stats.elapsed_total_ticks = get_ticks();
-    t->stats.total_trans = 0;
-    t->stats.remaining_ticks = 0;
 }
 
 int get_quantum(struct task_struct *t) 
