@@ -7,6 +7,7 @@
 #include <segment.h>
 #include <hardware.h>
 #include <sched.h>
+#include <errno.h>
 
 Byte phys_mem[TOTAL_PAGES];
 
@@ -73,7 +74,6 @@ for (j=0; j< NR_TASKS; j++) {
 }
 
 
-
 /* Initialize pages for initial process (user pages) */
 void set_user_pages( struct task_struct *task )
 {
@@ -101,6 +101,7 @@ void set_user_pages( struct task_struct *task )
   	process_PT[PAG_LOG_INIT_DATA+pag].bits.present = 1;
   }
 }
+
 
 /* Writes on CR3 register producing a TLB flush */
 void set_cr3(page_table_entry * dir)

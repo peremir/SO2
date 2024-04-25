@@ -18,6 +18,8 @@
 #define LECTURA 0
 #define ESCRIPTURA 1
 
+int quantum_left;
+
 extern unsigned int zeos_ticks;
 int quantum_left;
 
@@ -40,6 +42,7 @@ int sys_write(int fd, char * buffer, int size)
 
   if (size <= 0) return -EINVAL; /* Invalid argument -22 */
   
+  // Print char by char so the stacj does not fill
   for (int i = 0; i < size; ++i)
   {
     // Initialize the char that we are going to write
@@ -49,6 +52,7 @@ int sys_write(int fd, char * buffer, int size)
     error = copy_from_user(buffer + i, &buff, sizeof(buff));
     if (error < 0) return error;
 
+    // Write the 1 char coppied
     sys_write_console(&buff, sizeof(buff));
   }
 
@@ -70,9 +74,9 @@ int sys_getpid()
   return current()->PID;
 }
 
-
-int ret_from_fork() {
-	return 0;
+int ret_from_fork() 
+{
+  return 0;
 }
 
 int sys_fork()
@@ -82,55 +86,67 @@ int sys_fork()
   // creates the child process
 
   //Comprobamos que la freequeue esté libre para asignar un proceso
-  if (list_empty(&freequeue)) {
-	return -ENOMEM;
+  if (list_empty(&freequeue)) 
+  {
+    return -ENOMEM;
   }
+  
   //obtenemos de la freequeue una pcb libre
   struct list_head *free = list_first(&freequeue);
   list_del(free);
   union task_union *pcb = (union task_union*)list_head_to_task_struct(free);
+  
   //copiamos el task_union del padre al hijo
   copy_data(current(),pcb,sizeof(union task_union));
+  
   //como se ha copiado todo exactamente igual del padre al hijo, 
   //hay que asignarle otro directorio de páginas lógicas
   allocate_DIR(&(pcb->task));
   init_stats(pcb);
-/*
-pag_i < 256
+  
+  /*
+  pag_i < 256
   set_ss_pag(hijo, pag_i, get_frame(padre,pag_i))
-*/
+  */
   page_table_entry *PT_child = get_PT(&(pcb->task));
   page_table_entry *PT_parent = get_PT(current());
 
   int pag;
   int frame;
-  for (pag = PAG_LOG_INIT_DATA; pag < PAG_LOG_INIT_DATA + NUM_PAG_DATA; pag++) {
-	frame = alloc_frame();
-	if (frame != -1) {
-		set_ss_pag(PT_child, pag, frame);
-	}
-	else {
-		for (int i = PAG_LOG_INIT_DATA; i < pag; i++) {
-			free_frame(get_frame(PT_child, i));
-			del_ss_pag(PT_child, PAG_LOG_INIT_DATA+i);
-		}
-		list_add_tail(free, &freequeue);
-		return -ENOMEM;
-	}
+  for (pag = PAG_LOG_INIT_DATA; pag < PAG_LOG_INIT_DATA + NUM_PAG_DATA; pag++) 
+  {
+    frame = alloc_frame();
+    if (frame != -1) 
+    {
+      set_ss_pag(PT_child, pag, frame);
+    }
+    else 
+    {
+      for (int i = PAG_LOG_INIT_DATA; i < pag; i++) 
+      {
+        free_frame(get_frame(PT_child, i));
+	del_ss_pag(PT_child, PAG_LOG_INIT_DATA+i);
+      }
+      list_add_tail(free, &freequeue);
+      return -ENOMEM;
+    }
   }
-  
-  for (pag = 0; pag < NUM_PAG_KERNEL; pag++) {
-	set_ss_pag(PT_child, pag, get_frame(PT_parent, pag));
+
+  for (pag = 0; pag < NUM_PAG_KERNEL; pag++) 
+  {
+    set_ss_pag(PT_child, pag, get_frame(PT_parent, pag));
   }
-  for (pag = PAG_LOG_INIT_CODE; pag < PAG_LOG_INIT_CODE + NUM_PAG_CODE; pag++) {
-	set_ss_pag(PT_child, pag, get_frame(PT_parent, pag));
+  for (pag = PAG_LOG_INIT_CODE; pag < PAG_LOG_INIT_CODE + NUM_PAG_CODE; pag++) 
+  {
+    set_ss_pag(PT_child, pag, get_frame(PT_parent, pag));
   }
 
   int NUM_PAG_USER = NUM_PAG_DATA + NUM_PAG_CODE;
-  for (pag = PAG_LOG_INIT_DATA; pag < PAG_LOG_INIT_DATA + NUM_PAG_DATA; pag++) {
-	set_ss_pag(PT_parent, pag + NUM_PAG_USER, get_frame(PT_child, pag));
-	copy_data((void *)(pag << 12), (void *)((pag+NUM_PAG_USER) << 12), PAGE_SIZE);
-	del_ss_pag(PT_parent, pag+NUM_PAG_USER);
+  for (pag = PAG_LOG_INIT_DATA; pag < PAG_LOG_INIT_DATA + NUM_PAG_DATA; pag++) 
+  {
+    set_ss_pag(PT_parent, pag + NUM_PAG_USER, get_frame(PT_child, pag));
+    copy_data((void *)(pag << 12), (void *)((pag+NUM_PAG_USER) << 12), PAGE_SIZE);
+    del_ss_pag(PT_parent, pag+NUM_PAG_USER);
   }
   
   set_cr3(get_DIR(current()));
@@ -149,9 +165,10 @@ pag_i < 256
 
 void sys_exit()
 {
-	free_user_pages(current());
-    	update_process_state_rr(current(), &freequeue);
-    	sched_next_rr();
+
+  free_user_pages(current());
+  update_process_state_rr(current(), &freequeue);
+  sched_next_rr();
 }
 
 

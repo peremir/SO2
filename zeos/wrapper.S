@@ -13,6 +13,7 @@ ENTRY(addAsm)
 	pop    %ebp
 	ret
 
+/* System write interrupt wrapper */
 ENTRY(write)
 	push   %ebp
 	mov    %esp, %ebp
@@ -32,92 +33,7 @@ write_fin:
 	pop    %ebp
 	ret
 
-ENTRY (gettime)
-	push   %ebp
-	mov    %esp, %ebp
-	mov    $10, %eax		// 2) Dir quin servei és
-	pushl %ecx
-	pushl %edx
-	pushl $return_gettime
-	pushl %ebp
-	movl %esp, %ebp
-	sysenter
-return_gettime:
-	popl 	%ebp
-	addl	$4, %esp
-	popl 	%edx
-	popl 	%ecx
-	cmpl   	$0, %eax
-	jge    	gettime_fin
-	//neg    %eax
-	movl   %eax, errno		// 4) Tractament d'errors - Save errno to eax
-	mov    $-1, %eax
-gettime_fin:
-	pop    %ebp 
-	ret
-
-
-
-ENTRY(getpid)
-	push 	%ebp
-	mov	%esp, %ebp
-	mov 	$20, %eax
-	pushl %ecx
-	pushl %edx
-	pushl $return_getpid
-	pushl %ebp
-	movl %esp, %ebp
-	sysenter
-return_getpid:
-	popl %ebp
-	addl $4, %esp
-	popl %edx
-	popl %ecx
-	cmpl	$0, %eax
-	jge	getpid_fin
-	movl	%eax, errno
-	mov	$-1, %eax
-getpid_fin:
-	pop	%ebp
-	ret
-
-ENTRY(fork)
-	push 	%ebp
-	mov	%esp, %ebp
-	mov 	$2, %eax
-	pushl %ecx
-	pushl %edx
-	pushl $return_fork
-	pushl %ebp
-	movl %esp, %ebp
-	sysenter
-return_fork:
-	popl %ebp
-	addl $4, %esp
-	popl %edx
-	popl %ecx
-	cmpl	$0, %eax
-	jge	fork_fin
-	movl	%eax, errno
-	mov	$-1, %eax
-fork_fin:
-	pop	%ebp
-	ret
-   
-
-ENTRY(exit)
-	pushl %ebp
-	movl %esp, %ebp
-	movl $1, %eax
-	sysenter
-	popl %ebp
-	addl $4, %esp
-	ret
-
-
-
-
-/*
+/* System gettime sysenter wrapper */
 ENTRY(gettime)
 	pushl %ebp
 	movl %esp, %ebp
@@ -141,6 +57,69 @@ return_gettime:
 gettime_fin:
 	popl %ebp
 	ret
-*/
+
+/* System getpid sysenter wrapper */
+ENTRY(getpid)
+        pushl %ebp
+        movl %esp, %ebp
+        movl $20, %eax
+        pushl %ecx
+        pushl %edx
+        pushl $return_getpid
+        pushl %ebp
+        movl %esp, %ebp
+        sysenter
+return_getpid:
+        popl %ebp
+        addl $4, %esp
+        popl %edx
+        popl %ecx
+        cmpl $0, %eax
+        jge getpid_fin
+        //negl %eax
+        movl %eax, errno
+        movl $-1, %eax
+getpid_fin:
+        popl %ebp
+        ret
+
+/* System fork sysenter wrapper */
+ENTRY(fork)
+        pushl %ebp
+        movl %esp, %ebp 
+        movl $2, %eax
+        pushl %ecx
+        pushl %edx
+        pushl $return_fork
+        pushl %ebp
+        movl %esp, %ebp
+        sysenter
+return_fork:
+        popl %ebp
+        addl $4, %esp
+        popl %edx
+        popl %ecx
+        cmpl $0, %eax
+        jge fork_fin
+        //negl %eax             
+        movl %eax, errno        
+        movl $-1, %eax  
+fork_fin:             
+        popl %ebp       
+        ret
+
+ENTRY(exit)
+	pushl %ebp
+    	movl %esp, %ebp
+    	movl $1, %eax // id de la syscall exit() -> 1
+    	pushl $exit_return_user // @ a la que sysenter debe devolver
+   	pushl %ebp              // el ebp actual, que debera usarse al volver
+    	movl %esp, %ebp
+    	sysenter                // saltamos a la primera entrada de la sys_call_table
+exit_return_user:
+   	popl %ebp
+    	add $4, %esp // pop of return address.
+    	leave
+    	ret
 
 

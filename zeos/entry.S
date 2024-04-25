@@ -68,20 +68,23 @@
       movb $0x20, %al; \
       outb %al, $0x20; \
 
-ENTRY (keyboardHandler) /* Keyboard handler */ // hank
+/* Keyboard handler */
+ENTRY (keyboardHandler) // hank
 	SAVE_ALL
 	EOI
 	call keyboardService
 	RESTORE_ALL
 	iret
 
-ENTRY (clockHandler) /* System clock handler */
+/* System clock handler */
+ENTRY (clockHandler) // clank
         SAVE_ALL
         EOI
         call clockRoutine 
         RESTORE_ALL
         iret
 
+/* System call interrupt handler */
 ENTRY(system_call_handler)
 	SAVE_ALL				// Save the current context
 	cmpl $0, %EAX				// Is syscall number negative?
@@ -97,6 +100,7 @@ fin:
 	RESTORE_ALL				// Restore the context
 	iret
 
+/* System call sysenter handler */
 ENTRY(syscall_handler_sysenter)
 	push $__USER_DS
 	push %EBP				// User stack address
@@ -141,15 +145,12 @@ ENTRY(task_switch)
 	pushl %esi
 	pushl %edi
 	pushl %ebx
-	
 	pushl 8(%ebp)
 	call inner_task_switch
 	addl $4, %esp
-
 	popl %ebx
 	popl %edi
 	popl %esi
-
 	movl %esp, %ebp
 	popl %ebp
 	ret
@@ -157,7 +158,6 @@ ENTRY(task_switch)
 ENTRY(get_ebp)
 	movl %ebp, %eax
 	ret
-
 
 ENTRY(set_esp)
 	movl 4(%esp), %esp
