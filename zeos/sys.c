@@ -122,7 +122,7 @@ int sys_fork()
       for (int i = PAG_LOG_INIT_DATA; i < pag; i++) 
       {
         free_frame(get_frame(PT_child, i));
-	del_ss_pag(PT_child, PAG_LOG_INIT_DATA+i);
+				del_ss_pag(PT_child, PAG_LOG_INIT_DATA+i);
       }
       list_add_tail(free, &freequeue);
       return -ENOMEM;
@@ -155,6 +155,12 @@ int sys_fork()
 
   pcb->task.PID = pids;
   pids++;
+ 
+ 	//(union task_union*)list_head_to_task_struct(current()->child_list);
+	
+	list_add_tail(*pcb, (union task_union*)list_head_to_task_struct(current()->child_list));
+  pcb->parent = current();
+  
 
   list_add_tail(free, &readyqueue);
   return pcb->task.PID;
@@ -162,6 +168,17 @@ int sys_fork()
 
 void sys_exit()
 {
+  struct task_struct *pcb = current();
+  struct task_struct *pcb_parent = pcb->parent;	
+
+	struct list_head* it;
+  list_for_each(it, pcb_parent->child_list)
+	{
+		struct task_struct *pcb_child = list_head_to_task_struct(it);	
+		pcb_child->parent = idle_task; 
+ 		list_add_tail(it, &(idle_task->child_list));
+	}
+
   free_user_pages(current());
   update_process_state_rr(current(), &freequeue);
   sched_next_rr();
@@ -169,12 +186,32 @@ void sys_exit()
 
 void sys_block()
 {
-
+  if (pending_unblocks > 0) 
+  {
+    pending_unblocks--;	
+  }
+  else 
+  {	
+    struct list_head* list = current()->list;
+    list_del(list);
+		list_add_tail(list, &blocked);
+	}
 }
 
-void sys_unblock(int pid)
+void	 sys_unblock(int pid)
 {
-
+/*
+	 * if ((pid is current()->child) && process_pid is blocked) {
+	 *	desbloquejar (readyqueue nosek);
+	 *	return 0;
+	 * }
+	 * if (process_pid is NOT blocked) {
+	 *	pending_unblocks++;
+	 * 	return 0;
+	 * }
+	 * 
+	 * return -1; */
+		
 }
 
 

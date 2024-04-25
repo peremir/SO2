@@ -22,6 +22,9 @@ struct task_struct {
   DWord *kernel_esp;
   page_table_entry * dir_pages_baseAddr;
   int quantum;
+  struct list_head child_list;
+  struct list_head bro;
+  struct task_struct *parent;
 };
 
 union task_union {
