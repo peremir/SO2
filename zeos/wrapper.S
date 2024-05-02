@@ -142,17 +142,14 @@ block_return_user:
 ENTRY(unblock)
         pushl %ebp
         movl %esp, %ebp
-        push %ebx
         movl $26, %eax
-        movl 8(%ebp), %ebx 
+        movl 8(%ebp), %edx 
         pushl $unblock_return_user // @ a la que sysenter debe devolver
         pushl %ebp              // el ebp actual, que debera usarse al volver
         movl %esp, %ebp
         sysenter                // saltamos a la primera entrada de la sys_call_table
 unblock_return_user:
-        popl %ebx
+        add $8, %esp // pop of return address.
         popl %ebp
-        add $4, %esp // pop of return address.
-        leave
         ret
 
