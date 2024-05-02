@@ -30,7 +30,6 @@ struct task_struct *list_head_to_task_struct(struct list_head *l)
 int pids;
 int pending_unblocks;
 extern int quantum_left;
-int pending_unblocks;
 
 
 /* get_DIR - Returns the Page Directory address for task 't' */

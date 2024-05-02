@@ -202,12 +202,31 @@ void sys_block()
 
 int sys_unblock(int pid)
 {
-
-  if (){
-    
-	}
+    struct list_head* it;
+    list_for_each(it, &current()->child_list)
+	{
+		struct task_struct *pcb_child = list_head_to_task_struct(it);	
+	    if (pcb_child->PID == pid) {
+            if (list_first(&(pcb_child->list)) == list_first(&blocked)) {
+                //desbloquearlo
+                struct list_head * l = &(pcb_child->list);
+                list_del(l);
+                list_add_tail(l, &readyqueue);
+                return 0;
+            }
+            else {
+                pending_unblocks++;
+                return 0;
+            }
+        }
+    }
+    //ESTO TIENE QUE SER -1 !!!!
+    return 33;
+}
 /*
-	 * if ((pid is current()->child) && process_pid is blocked) {
+ * 
+ *
+ :	 * if ((pid is current()->child) && process_pid is blocked) {
 	 *	desbloquejar (readyqueue nosek);
 	 *	return 0;
 	 * }
@@ -218,6 +237,6 @@ int sys_unblock(int pid)
 	 * 
 	 * return -1; 
 	*/	
-}
+
 
 
