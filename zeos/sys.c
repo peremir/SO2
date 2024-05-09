@@ -157,9 +157,19 @@ int sys_fork()
   pids++;
 
   INIT_LIST_HEAD(&(pcb->task.child_list));
+
  	//(union task_union*)list_head_to_task_struct(current()->child_list);
 	
-  list_add_tail(&pcb->task.bro, &(current()->child_list));
+  list_add_tail(&(pcb->task.child_anchor), &(current()->child_list));
+
+    struct list_head* it;
+    list_for_each(it, &current()->child_list)
+	{
+        struct task_struct *pcb_child = list_entry(it, struct task_struct, child_list);	
+	    char * buffer = "\0\0\0\0\0";
+        itoa(pcb_child->PID, buffer);
+        printk(buffer);
+    }
 
   list_add_tail(free, &readyqueue);
   return pcb->task.PID;
@@ -207,10 +217,10 @@ int sys_unblock(int pid)
     list_for_each(it, &(current()->child_list))
 	{
         struct task_struct *pcb_child = list_head_to_task_struct(it);	
-	    char * buffer = "\0\0\0\0\0";
+/*	    char * buffer = "\0\0\0\0\0";
         itoa(pcb_child->PID, buffer);
         printk(buffer);
-
+*/
         if (pcb_child->PID == pid) {
             if (list_first(&(pcb_child->list)) == list_first(&blocked)) {
                 //desbloquearlo

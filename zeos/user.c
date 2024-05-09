@@ -53,13 +53,13 @@ int __attribute__ ((__section__(".text.main")))
   if (pid == 0)
   { 
     char *bufferC = "\0\0\0\0\0";
-    block();
+  //  block();
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
     write(1, bufferC, 6);
   }
   else if(pid > 0)
-  {
+  {  
     char *bufferP = "\0\0\0\0\0";
     write(1, "\nPARENT Getpid: ", 16);
     itoa(getpid(), bufferP);

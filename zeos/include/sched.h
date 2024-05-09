@@ -23,7 +23,7 @@ struct task_struct {
   page_table_entry * dir_pages_baseAddr;
   int quantum;
   struct list_head child_list;
-  struct list_head bro;
+  struct list_head child_anchor;
   struct task_struct *parent;
 };
 
