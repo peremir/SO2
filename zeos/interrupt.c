@@ -132,7 +132,8 @@ void schedule()
 {
     update_sched_data_rr();
 
-    if (needs_sched_rr()) {
+    if (needs_sched_rr()) 
+    {
         update_process_state_rr(current(), &readyqueue);
         sched_next_rr();
     }
@@ -144,27 +145,6 @@ void clockRoutine()
   zeos_show_clock();
 
   schedule();  
-}
-
-
-void pf_red_screen(char *eip, char *hex)
-{
-  clear_screen(0x4000);
-  
-  change_pointer(0, 8);
-
-  printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
-  printk_color("!!                                                     !!\n", 0x0400);
-  printk_color("!!  !!! Process generates a PAGE FAULT exception !!!   !!\n", 0x0400);
-
-  printk_color("!!             at EIP: @", 0x0400); 
-  printk_color(eip , 0x0400);
-  printk_color(" (0x", 0x0400);
-  printk_color(hex , 0x0400);
-  printk_color(")              !!\n", 0x0400);
-  
-  printk_color("!!                                                     !!\n", 0x0400);
-  printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
 }
 
 //NEW versio only text
@@ -204,6 +184,27 @@ void pf_routine(int error, int eip)
 
   while(1);
 }
+
+/*
+void pf_red_screen(char *eip, char *hex)
+{
+  clear_screen(0x4000);
+  
+  change_pointer(0, 8);
+
+  printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
+  printk_color("!!                                                     !!\n", 0x0400);
+  printk_color("!!  !!! Process generates a PAGE FAULT exception !!!   !!\n", 0x0400);
+
+  printk_color("!!             at EIP: @", 0x0400); 
+  printk_color(eip , 0x0400);
+  printk_color(" (0x", 0x0400);
+  printk_color(hex , 0x0400);
+  printk_color(")              !!\n", 0x0400);
+  
+  printk_color("!!                                                     !!\n", 0x0400);
+  printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
+} */
 
 /*
 //NEW versio amb page fault red screen

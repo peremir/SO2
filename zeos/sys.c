@@ -92,8 +92,9 @@ int sys_fork()
   //obtenemos de la freequeue una pcb libre
   struct list_head *free = list_first(&freequeue);
   list_del(free);
-  union task_union *pcb = (union task_union*)list_head_to_task_struct(free);
-  
+  struct task_struct *Spcb = list_head_to_task_struct(free);
+  union task_union *pcb = (union task_union*)Spcb;
+
   //copiamos el task_union del padre al hijo
   copy_data(current(),pcb,sizeof(union task_union));
   
@@ -156,11 +157,18 @@ int sys_fork()
   pcb->task.PID = pids;
   pids++;
 
-  INIT_LIST_HEAD(&(pcb->task.child_list));
- 	//(union task_union*)list_head_to_task_struct(current()->child_list);
-	
-  list_add_tail(&pcb->task.bro, &(current()->child_list));
-
+  INIT_LIST_HEAD(&(Spcb->child_list));
+  list_add( &(Spcb->anchor), &current()->child_list );
+/*  
+  struct list_head *it; 
+  list_for_each( it, &current()->child_list ) {
+    struct task_struct *child = list_head_to_task_struct(it);  
+    char *buffer = "\0\0\0\0\0";
+    itoa(child->PID, buffer);
+    printk("\n");  printk("child_list pid ");
+    printk(buffer);
+ }
+ */
   list_add_tail(free, &readyqueue);
   return pcb->task.PID;
 }
@@ -193,12 +201,10 @@ void sys_block()
   {	
     struct list_head* list = &current()->list;
     list_del(list);
-	list_add_tail(list, &blocked);
+    list_add_tail(list, &blocked);
     sched_next_rr();
-    }
+  }
 }
-
-
 
 
 int sys_unblock(int pid)
@@ -209,7 +215,7 @@ int sys_unblock(int pid)
         struct task_struct *pcb_child = list_head_to_task_struct(it);	
 	    char * buffer = "\0\0\0\0\0";
         itoa(pcb_child->PID, buffer);
-        printk(buffer);
+       printk(buffer); printk("\n");
 
         if (pcb_child->PID == pid) {
             if (list_first(&(pcb_child->list)) == list_first(&blocked)) {
@@ -228,20 +234,4 @@ int sys_unblock(int pid)
     //ESTO TIENE QUE SER -1 !!!!
     return 33;
 }
-/*
- * 
- *
- :	 * if ((pid is current()->child) && process_pid is blocked) {
-	 *	desbloquejar (readyqueue nosek);
-	 *	return 0;
-	 * }
-	 * if (process_pid is NOT blocked) {
-	 *	pending_unblocks++;
-	 * 	return 0;
-	 * }
-	 * 
-	 * return -1; 
-	*/	
-
-
 

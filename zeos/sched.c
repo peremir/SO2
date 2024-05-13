@@ -23,7 +23,8 @@ union task_union task[NR_TASKS]
 #if 1
 struct task_struct *list_head_to_task_struct(struct list_head *l)
 {
-  return list_entry( l, struct task_struct, list);
+  //return list_entry(l, struct task_struct, list);
+  return (struct task_struct *)((unsigned long)list_entry(l, struct task_struct, list) & 0xFF000);
 }
 #endif
 
@@ -73,6 +74,7 @@ void init_idle (void)
   
   pcb->task.PID = 0; 
   allocate_DIR(&(pcb->task));
+  
   INIT_LIST_HEAD(&(pcb->task.child_list));
 
   pcb->stack[KERNEL_STACK_SIZE - 1] = (unsigned long)cpu_idle;
@@ -91,6 +93,7 @@ void init_task1(void) // task1 = INIT
   pcb->task.PID = 1; 
   allocate_DIR(&(pcb->task));
   set_user_pages(&(pcb->task));
+  
   pcb->task.parent = pcb;  
   INIT_LIST_HEAD(&(pcb->task.child_list));
   

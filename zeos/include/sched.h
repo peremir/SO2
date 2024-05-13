@@ -22,8 +22,8 @@ struct task_struct {
   DWord *kernel_esp;
   page_table_entry * dir_pages_baseAddr;
   int quantum;
-  struct list_head child_list;
-  struct list_head bro;
+  struct list_head child_list;  //Llista de tots els fills
+  struct list_head anchor;      //Anchor per si el proces es fill d'algun pare
   struct task_struct *parent;
 };
 
