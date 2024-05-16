@@ -53,11 +53,11 @@ int __attribute__ ((__section__(".text.main")))
   int pid = fork();
   if (pid == 0)
   { 
+
     char *bufferC = "\0\0\0\0\0";
-    //block();
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
-    write(1, bufferC, 6);
+    write(1, bufferC, strlen(bufferC));
 
   }
   else if(pid > 0)
@@ -65,21 +65,20 @@ int __attribute__ ((__section__(".text.main")))
     char *bufferP = "\0\0\0\0\0";
     write(1, "\nPARENT Getpid: ", 16);
     itoa(getpid(), bufferP);
-    write(1, bufferP, 6);
-     
+    write(1, bufferP, strlen(bufferP));
+  }
        
     /*
     int ret = unblock(2);
     char *fubber = "\0\0\0\0\0";
     itoa(ret, fubber);
     print(fubber);
-    */
-  }
+    */  
  
  int pid2 = fork();
        if (pid2 == 0)
        {
-        char *bufferCD = "\0\0\0\0\0\0\0\0\0\0";
+        char *bufferCD = "\0\0\0\0\0\0";
         //block();
         write(1, "\n   CHILD2 Getpid: ", 19);
         itoa(getpid(), bufferCD);
@@ -87,12 +86,12 @@ int __attribute__ ((__section__(".text.main")))
         }
         else if(pid2 > 0)
         {
-        char *bufferPD = "\0\0\0\0\0\0\0\0\0\0";
+        char *bufferPD = "\0\0\0\0\0\0";
         write(1, "\n   PARENT2 Getpid: ", 19);
         itoa(getpid(), bufferPD);
         write(1, bufferPD, 6);
-        }
-
+       }
+ 
   /* Funcio que provoca un page fault exception */
   //pf(); 
 

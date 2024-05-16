@@ -58,7 +58,7 @@ gettime_fin:
 	popl %ebp
 	ret
 
-/* System getpid sysenter wrapper */
+/* System getpid sysenter wrapper 
 ENTRY(getpid)
         pushl %ebp
         movl %esp, %ebp
@@ -81,9 +81,18 @@ return_getpid:
         movl $-1, %eax
 getpid_fin:
         popl %ebp
-        ret
+        ret*/
+        
+        /* int getpid() */
+ENTRY(getpid)
+	pushl %ebp
+	movl %esp, %ebp
+	movl $20, %eax
+	call syscall_sysenter
+	popl %ebp
+	ret
 
-/* System fork sysenter wrapper */
+/* System fork sysenter wrapper 
 ENTRY(fork)
         pushl %ebp
         movl %esp, %ebp 
@@ -106,7 +115,40 @@ return_fork:
         movl $-1, %eax  
 fork_fin:             
         popl %ebp       
-        ret
+        ret/*
+        
+/* int fork() */
+ENTRY(fork)
+	pushl %ebp
+	movl %esp, %ebp
+	movl $2, %eax
+	call syscall_sysenter
+	test %eax, %eax
+	js nok	// if (eax < 0) -->
+	popl %ebp
+	ret
+	
+/* Common code for negative return */
+nok:
+	neg %eax
+	mov %eax, errno
+	mov $-1, %eax
+	popl %ebp
+	ret
+	
+ENTRY(syscall_sysenter)
+	push %ecx
+	push %edx
+	push $SYSENTER_RETURN
+	push %ebp
+	mov %esp, %ebp
+	sysenter
+ENTRY(SYSENTER_RETURN)
+	pop %ebp
+	pop %edx
+	pop %edx
+	pop %ecx
+	ret
 
 /* System exit sysenter wrapper */
 ENTRY(exit)
