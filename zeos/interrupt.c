@@ -25,11 +25,11 @@ void page_fault_exception_handler();
 char char_map[] =
 {
   '\0','\0','1','2','3','4','5','6',
-  '7','8','9','0','\'','¡','\0','\0',
+  '7','8','9','0','\'','Â¡','\0','\0',
   'q','w','e','r','t','y','u','i',
   'o','p','`','+','\0','\0','a','s',
-  'd','f','g','h','j','k','l','ñ',
-  '\0','º','\0','ç','z','x','c','v',
+  'd','f','g','h','j','k','l','Ã±',
+  '\0','Âº','\0','Ã§','z','x','c','v',
   'b','n','m',',','.','-','\0','*',
   '\0','\0','\0','\0','\0','\0','\0','\0',
   '\0','\0','\0','\0','\0','\0','\0','7',
@@ -128,43 +128,12 @@ void keyboardService()
   }
 }
 
-void schedule() 
-{
-    update_sched_data_rr();
-
-    if (needs_sched_rr()) {
-        update_process_state_rr(current(), &readyqueue);
-        sched_next_rr();
-    }
-}
-
 void clockRoutine() 
 {
   zeos_ticks++;
   zeos_show_clock();
 
   schedule();  
-}
-
-
-void pf_red_screen(char *eip, char *hex)
-{
-  clear_screen(0x4000);
-  
-  change_pointer(0, 8);
-
-  printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
-  printk_color("!!                                                     !!\n", 0x0400);
-  printk_color("!!  !!! Process generates a PAGE FAULT exception !!!   !!\n", 0x0400);
-
-  printk_color("!!             at EIP: @", 0x0400); 
-  printk_color(eip , 0x0400);
-  printk_color(" (0x", 0x0400);
-  printk_color(hex , 0x0400);
-  printk_color(")              !!\n", 0x0400);
-  
-  printk_color("!!                                                     !!\n", 0x0400);
-  printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
 }
 
 //NEW versio only text
@@ -177,7 +146,7 @@ void pf_routine(int error, int eip)
   itoa(eip, char_eip);
   printk(char_eip);		
   
-  char hex[9]; // 5 caracteres para el valor hexadecimal más el terminador nulo
+  char hex[9]; // 5 caracteres para el valor hexadecimal mÃ¡s el terminador nulo
   int decimal = eip;
   int nonzero = 0;
     for (int i = 0; i < 8; ++i) 
@@ -196,7 +165,7 @@ void pf_routine(int error, int eip)
     }
   
   // Terminador nulo
-  hex[8] = '\0'; //Asegurarse de que la cadena esté terminada correctamente
+  hex[8] = '\0'; //Asegurarse de que la cadena estÃ© terminada correctamente
   
   printk(" (0x");
   printk(hex);
@@ -206,23 +175,44 @@ void pf_routine(int error, int eip)
 }
 
 /*
+void pf_red_screen(char *eip, char *hex)
+{
+  clear_screen(0x4000);
+  
+  change_pointer(0, 8);
+
+  printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
+  printk_color("!!                                                     !!\n", 0x0400);
+  printk_color("!!  !!! Process generates a PAGE FAULT exception !!!   !!\n", 0x0400);
+
+  printk_color("!!             at EIP: @", 0x0400); 
+  printk_color(eip , 0x0400);
+  printk_color(" (0x", 0x0400);
+  printk_color(hex , 0x0400);
+  printk_color(")              !!\n", 0x0400);
+  
+  printk_color("!!                                                     !!\n", 0x0400);
+  printk_color("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", 0x0400);
+} */
+
+/*
 //NEW versio amb page fault red screen
 void pf_routine(int error, int eip) 
 {
-  // necesito la adreça on ha fallat la pinga
+  // necesito la adreÃ§a on ha fallat la pinga
   
   char char_eip[24];
   itoa(eip, char_eip);
   printk(char_eip);
 
   char hexChars[] = "0123456789ABCDEF";
-  char hex[6]; // 5 caracteres para el valor hexadecimal más el terminador nulo
+  char hex[6]; // 5 caracteres para el valor hexadecimal mÃ¡s el terminador nulo
 
   for (int i = 0; i < 5; ++i) 
   {
     hex[i] = hexChars[(eip >> (16 - i * 4)) & 0xF];
   }
-  hex[5] = '\0'; // Asegurarse de que la cadena esté terminada correctamente
+  hex[5] = '\0'; // Asegurarse de que la cadena estÃ© terminada correctamente
   
   pf_red_screen(char_eip, hex);
   

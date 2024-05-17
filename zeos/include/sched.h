@@ -14,16 +14,14 @@
 
 #define DEFAULT_QUANTUM 10
 
-enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
-
 struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
-  struct list_head list;
-  DWord *kernel_esp;
+  int quantum;                  /* ZeOS Ticks remaining */
+  int kernel_esp;             /* kernel stack pointer */
+  struct list_head list;        /* Which list is queued */
   page_table_entry * dir_pages_baseAddr;
-  int quantum;
-  struct list_head child_list;
-  struct list_head child_anchor;
+  struct list_head child_list;  //Llista de tots els fills
+  struct list_head anchor;      //Anchor per si el proces es fill d'algun pare
   struct task_struct *parent;
 };
 
@@ -37,13 +35,6 @@ extern union task_union task[NR_TASKS]; /* Vector de tasques */
 extern struct list_head freequeue;
 extern struct list_head readyqueue;
 extern struct task_struct * idle_task;
-
-
-extern int quantum_left;
-
-
-extern int pids;
-extern pending_unblocks;
 
 #define KERNEL_ESP(t)       	(DWord) &(t)->stack[KERNEL_STACK_SIZE]
 
@@ -81,5 +72,6 @@ void sched_next_rr();
 void update_process_state_rr(struct task_struct *t, struct list_head *dest);
 int needs_sched_rr();
 void update_sched_data_rr();
+void schedule();
 
 #endif  /* __SCHED_H__ */

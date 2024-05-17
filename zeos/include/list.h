@@ -123,7 +123,7 @@ int list_empty(const struct list_head *head);
 #define list_for_each_safe(pos, n, head) \
         for (pos = (head)->next, n = pos->next; pos != (head); \
                 pos = n, n = pos->next)
-
+//                                                                                                                                                                                                          elna <3
 /**
  * list_first   -   returns the first list item
  * @head:   the head for your list.

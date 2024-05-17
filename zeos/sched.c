@@ -23,7 +23,8 @@ union task_union task[NR_TASKS]
 #if 1
 struct task_struct *list_head_to_task_struct(struct list_head *l)
 {
-  return list_entry( l, struct task_struct, list);
+  //return list_entry(l, struct task_struct, list);
+  return (struct task_struct *)((unsigned long)list_entry(l, struct task_struct, list) & 0xFF000);
 }
 #endif
 
@@ -73,6 +74,7 @@ void init_idle (void)
   
   pcb->task.PID = 0; 
   allocate_DIR(&(pcb->task));
+  
   INIT_LIST_HEAD(&(pcb->task.child_list));
 
   pcb->stack[KERNEL_STACK_SIZE - 1] = (unsigned long)cpu_idle;
@@ -91,31 +93,32 @@ void init_task1(void) // task1 = INIT
   pcb->task.PID = 1; 
   allocate_DIR(&(pcb->task));
   set_user_pages(&(pcb->task));
+  
   pcb->task.parent = pcb;  
   INIT_LIST_HEAD(&(pcb->task.child_list));
   
   pcb->task.quantum = DEFAULT_QUANTUM;
   quantum_left = pcb->task.quantum;
 
-  pcb->task.kernel_esp = &(pcb->stack[KERNEL_STACK_SIZE]);
-  tss.esp0 = (DWord)pcb->task.kernel_esp;
+  tss.esp0 = (DWord)&(pcb->stack[KERNEL_STACK_SIZE]);
   writeMSR(0x175, tss.esp0);
 
   set_cr3(get_DIR(&(pcb->task)));
 
 }
 
-void inner_task_switch(union task_union * new) 
-{ 
+void inner_task_switch(union task_union *new)
+{
+  /* Update TSS and MSR to make it point to the new stack */
   tss.esp0 = KERNEL_ESP(new);
   writeMSR(0x175, tss.esp0);
-	
+
+  /* TLB flush. New address space */
   set_cr3(get_DIR((struct task_struct*)new));
-  current()->kernel_esp = get_ebp();
 
   set_esp(new->task.kernel_esp);
+  quantum_left=current()->quantum;
 }
-
 
 void init_sched()
 {
@@ -156,6 +159,11 @@ void update_sched_data_rr (void)
  --quantum_left;
 }
 
+
+
+//NATROS	
+
+/*
 int needs_sched_rr (void)
 {
   if (quantum_left == 0 && !list_empty(&readyqueue))
@@ -179,6 +187,60 @@ void update_process_state_rr (struct task_struct *t, struct list_head *dst_queue
 void sched_next_rr (void)
 {
   struct task_struct *next_task;
+  struct list_head *ready;
+
+  if (list_empty(&readyqueue)) 
+    next_task = idle_task;
+  else {
+    ready = list_first(&readyqueue);
+    list_del(ready);
+    
+    next_task = list_head_to_task_struct(ready);
+}
+  quantum_left = get_quantum(current());
+  
+  update_process_state_rr(next_task, NULL);
+
+  task_switch((union task_union*)next_task);
+}
+
+void schedule() 
+{
+    update_sched_data_rr();
+
+    if (needs_sched_rr()) 
+    {
+        update_process_state_rr(current(), &readyqueue);
+        sched_next_rr();
+    }
+}
+*/
+
+
+
+//EXAMEN
+
+/*
+int needs_sched_rr(void)
+{
+  if ((quantum_left == 0) && (!list_empty(&readyqueue))) 
+   return 1;
+  if (quantum_left == 0) quantum_left = get_quantum(current());
+   return 0;
+}
+
+void update_process_state_rr(struct task_struct *t, struct list_head *dst_queue)
+{
+  if (t != current() && t != idle_task) 
+    list_del(&t->list);
+  
+  if (dst_queue != NULL) 
+    list_add_tail(&t->list, dst_queue);
+}
+
+void sched_next_rr (void)
+{
+  struct task_struct *next_task;
 
   if (list_empty(&readyqueue)) 
     next_task = idle_task;
@@ -187,5 +249,81 @@ void sched_next_rr (void)
 
   update_process_state_rr(next_task, NULL);
 
+  quantum_left = get_quantum(next_task);
+
   task_switch((union task_union*)next_task);
+}
+
+void schedule()
+{
+  update_sched_data_rr();
+  if (needs_sched_rr())
+  {
+    update_process_state_rr(current(), &readyqueue);
+    sched_next_rr();
+  }
+}*/
+
+
+
+
+
+
+//ROGER
+
+int needs_sched_rr(void)
+{
+  if ((remaining_quantum==0)&&(!list_empty(&readyqueue))) return 1;
+  if (remaining_quantum==0) remaining_quantum=get_quantum(current());
+  return 0;
+}
+
+void update_process_state_rr(struct task_struct *t, struct list_head *dst_queue)
+{
+  if (t->state!=ST_RUN) list_del(&(t->list));
+  if (dst_queue!=NULL)
+  {
+    list_add_tail(&(t->list), dst_queue);
+    if (dst_queue!=&readyqueue) t->state=ST_BLOCKED;
+    else
+    {
+      update_stats(&(t->p_stats.system_ticks), &(t->p_stats.elapsed_total_ticks));
+      t->state=ST_READY;
+    }
+  }
+  else t->state=ST_RUN;
+}
+
+void sched_next_rr(void)
+{
+  struct list_head *e;
+  struct task_struct *t;
+
+  if (!list_empty(&readyqueue)) {
+	e = list_first(&readyqueue);
+    list_del(e);
+
+    t=list_head_to_task_struct(e);
+  }
+  else
+    t=idle_task;
+
+  t->state=ST_RUN;
+  remaining_quantum=get_quantum(t);
+
+  update_stats(&(current()->p_stats.system_ticks), &(current()->p_stats.elapsed_total_ticks));
+  update_stats(&(t->p_stats.ready_ticks), &(t->p_stats.elapsed_total_ticks));
+  t->p_stats.total_trans++;
+
+  task_switch((union task_union*)t);
+}
+
+void schedule()
+{
+  update_sched_data_rr();
+  if (needs_sched_rr())
+  {
+    update_process_state_rr(current(), &readyqueue);
+    sched_next_rr();
+  }
 }

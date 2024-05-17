@@ -58,7 +58,7 @@ gettime_fin:
 	popl %ebp
 	ret
 
-/* System getpid sysenter wrapper */
+/* System getpid sysenter wrapper 
 ENTRY(getpid)
         pushl %ebp
         movl %esp, %ebp
@@ -81,9 +81,18 @@ return_getpid:
         movl $-1, %eax
 getpid_fin:
         popl %ebp
-        ret
+        ret*/
+        
+        /* int getpid() */
+ENTRY(getpid)
+	pushl %ebp
+	movl %esp, %ebp
+	movl $20, %eax
+	call syscall_sysenter
+	popl %ebp
+	ret
 
-/* System fork sysenter wrapper */
+/* System fork sysenter wrapper 
 ENTRY(fork)
         pushl %ebp
         movl %esp, %ebp 
@@ -106,7 +115,40 @@ return_fork:
         movl $-1, %eax  
 fork_fin:             
         popl %ebp       
-        ret
+        ret/*
+        
+/* int fork() */
+ENTRY(fork)
+	pushl %ebp
+	movl %esp, %ebp
+	movl $2, %eax
+	call syscall_sysenter
+	test %eax, %eax
+	js nok	// if (eax < 0) -->
+	popl %ebp
+	ret
+	
+/* Common code for negative return */
+nok:
+	neg %eax
+	mov %eax, errno
+	mov $-1, %eax
+	popl %ebp
+	ret
+	
+ENTRY(syscall_sysenter)
+	push %ecx
+	push %edx
+	push $SYSENTER_RETURN
+	push %ebp
+	mov %esp, %ebp
+	sysenter
+ENTRY(SYSENTER_RETURN)
+	pop %ebp
+	pop %edx
+	pop %edx
+	pop %ecx
+	ret
 
 /* System exit sysenter wrapper */
 ENTRY(exit)
@@ -123,7 +165,7 @@ exit_return_user:
     	leave
     	ret
 
-/* System block sysenter wrapper */
+/* System block sysenter wrapper 
 ENTRY(block)
         pushl %ebp
         movl %esp, %ebp
@@ -138,7 +180,7 @@ block_return_user:
         leave
         ret
 
-/* System unblock sysenter wrapper */
+/* System unblock sysenter wrapper 
 ENTRY(unblock)
         pushl %ebp
         movl %esp, %ebp
@@ -150,6 +192,58 @@ ENTRY(unblock)
         sysenter                // saltamos a la primera entrada de la sys_call_table
 unblock_return_user:
         add $8, %esp // pop of return address.
+        popl %ebp
+        ret
+*/
+
+/* System block sysenter wrapper */
+ENTRY(block)
+        pushl %ebp
+        movl %esp, %ebp
+        movl $25, %eax  //; Replace SYS_BLOCK with the actual syscall number for block
+        pushl %ecx
+        pushl %edx
+        pushl $return_block
+        pushl %ebp
+        movl %esp, %ebp
+        sysenter
+return_block:
+        popl %ebp
+        addl $4, %esp
+        popl %edx
+        popl %ecx
+        cmpl $0, %eax
+        jge block_fin
+        //negl %eax
+        movl %eax, errno
+        movl $-1, %eax
+block_fin:
+        popl %ebp
+        ret
+
+/* System unblock sysenter wrapper */
+ENTRY(unblock)
+        pushl %ebp
+        movl %esp, %ebp
+        movl 8(%ebp), %ebx      // ; Move the pid argument into %ebx
+        movl $26, %eax  //; Replace SYS_UNBLOCK with the actual syscall number for unblock
+        pushl %ecx
+        pushl %edx
+        pushl $return_unblock
+        pushl %ebp
+        movl %esp, %ebp
+        sysenter
+return_unblock:
+        popl %ebp
+        addl $4, %esp
+        popl %edx
+        popl %ecx
+        cmpl $0, %eax
+        jge unblock_fin
+        //negl %eax
+        movl %eax, errno
+        movl $-1, %eax
+unblock_fin:
         popl %ebp
         ret
 

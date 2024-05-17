@@ -79,100 +79,106 @@ int ret_from_fork()
 
 int sys_fork()
 {
-  //int PID=-1;
+  struct list_head *lhcurrent = NULL;
+  union task_union *uchild;
+  
+  /* Any free task_struct? */
+  if (list_empty(&freequeue)) return -ENOMEM;
 
-  // creates the child process
+  lhcurrent=list_first(&freequeue);
+  
+  list_del(lhcurrent);
 
-  //Comprobamos que la freequeue esté libre para asignar un proceso
-  if (list_empty(&freequeue)) 
+  struct task_struct *schild = list_head_to_task_struct(lhcurrent);
+
+  uchild=(union task_union*)list_head_to_task_struct(lhcurrent);
+  
+  /* Copy the parent's task struct to child's */
+  copy_data(current(), uchild, sizeof(union task_union));
+  
+  /* new pages dir */
+  allocate_DIR((struct task_struct*)uchild);
+  
+  /* Allocate pages for DATA+STACK */
+  int new_ph_pag, pag, i;
+  page_table_entry *process_PT = get_PT(&uchild->task);
+  for (pag=0; pag<NUM_PAG_DATA; pag++)
   {
-    return -ENOMEM;
-  }
-  
-  //obtenemos de la freequeue una pcb libre
-  struct list_head *free = list_first(&freequeue);
-  list_del(free);
-  union task_union *pcb = (union task_union*)list_head_to_task_struct(free);
-  
-  //copiamos el task_union del padre al hijo
-  copy_data(current(),pcb,sizeof(union task_union));
-  
-  //como se ha copiado todo exactamente igual del padre al hijo, 
-  //hay que asignarle otro directorio de páginas lógicas
-  allocate_DIR(&(pcb->task));
-  
-  /*
-  pag_i < 256
-  set_ss_pag(hijo, pag_i, get_frame(padre,pag_i))
-  */
-  page_table_entry *PT_child = get_PT(&(pcb->task));
-  page_table_entry *PT_parent = get_PT(current());
-
-  int pag;
-  int frame;
-  for (pag = PAG_LOG_INIT_DATA; pag < PAG_LOG_INIT_DATA + NUM_PAG_DATA; pag++) 
-  {
-    frame = alloc_frame();
-    if (frame != -1) 
+    new_ph_pag=alloc_frame();
+    if (new_ph_pag!=-1) /* One page allocated */
     {
-      set_ss_pag(PT_child, pag, frame);
+      set_ss_pag(process_PT, PAG_LOG_INIT_DATA+pag, new_ph_pag);
     }
-    else 
+    else /* No more free pages left. Deallocate everything */
     {
-      for (int i = PAG_LOG_INIT_DATA; i < pag; i++) 
+      /* Deallocate allocated pages. Up to pag. */
+      for (i=0; i<pag; i++)
       {
-        free_frame(get_frame(PT_child, i));
-				del_ss_pag(PT_child, PAG_LOG_INIT_DATA+i);
+        free_frame(get_frame(process_PT, PAG_LOG_INIT_DATA+i));
+        del_ss_pag(process_PT, PAG_LOG_INIT_DATA+i);
       }
-      list_add_tail(free, &freequeue);
-      return -ENOMEM;
+      /* Deallocate task_struct */
+      list_add_tail(lhcurrent, &freequeue);
+      
+      /* Return error */
+      return -EAGAIN; 
     }
   }
 
-  for (pag = 0; pag < NUM_PAG_KERNEL; pag++) 
+  /* Copy parent's SYSTEM and CODE to child. */
+  page_table_entry *parent_PT = get_PT(current());
+  for (pag=0; pag<NUM_PAG_KERNEL; pag++)
   {
-    set_ss_pag(PT_child, pag, get_frame(PT_parent, pag));
+    set_ss_pag(process_PT, pag, get_frame(parent_PT, pag));
   }
-  for (pag = PAG_LOG_INIT_CODE; pag < PAG_LOG_INIT_CODE + NUM_PAG_CODE; pag++) 
+  for (pag=0; pag<NUM_PAG_CODE; pag++)
   {
-    set_ss_pag(PT_child, pag, get_frame(PT_parent, pag));
+    set_ss_pag(process_PT, PAG_LOG_INIT_CODE+pag, get_frame(parent_PT, PAG_LOG_INIT_CODE+pag));
   }
-
-  int NUM_PAG_USER = NUM_PAG_DATA + NUM_PAG_CODE;
-  for (pag = PAG_LOG_INIT_DATA; pag < PAG_LOG_INIT_DATA + NUM_PAG_DATA; pag++) 
+  /* Copy parent's DATA to child. We will use TOTAL_PAGES-1 as a temp logical page to map to */
+  for (pag=NUM_PAG_KERNEL; pag<NUM_PAG_KERNEL+NUM_PAG_DATA; pag++)
   {
-    set_ss_pag(PT_parent, pag + NUM_PAG_USER, get_frame(PT_child, pag));
-    copy_data((void *)(pag << 12), (void *)((pag+NUM_PAG_USER) << 12), PAGE_SIZE);
-    del_ss_pag(PT_parent, pag+NUM_PAG_USER);
+    /* Map one child page to parent's address space. */
+    set_ss_pag(parent_PT, pag+NUM_PAG_DATA+NUM_PAG_CODE, get_frame(process_PT, pag));
+    copy_data((void*)(pag<<12), (void*)((pag+NUM_PAG_DATA+NUM_PAG_CODE)<<12), PAGE_SIZE);
+    del_ss_pag(parent_PT, pag+NUM_PAG_DATA+NUM_PAG_CODE);
   }
-  
+  /* Deny access to the child's memory space */
   set_cr3(get_DIR(current()));
   
-  pcb->task.kernel_esp = &(pcb->stack[KERNEL_STACK_SIZE-19]); // 17-2 por el @ret_from_fork y el ebp.
+  int register_ebp;		/* frame pointer */
+  /* Map Parent's ebp to child's stack */
+  register_ebp = (int) get_ebp();
+  register_ebp=(register_ebp - (int)current()) + (int)(uchild);
 
-  pcb->stack[KERNEL_STACK_SIZE-19] = 0;
-  pcb->stack[KERNEL_STACK_SIZE-18] = (DWord)ret_from_fork;
+  uchild->task.kernel_esp=register_ebp + sizeof(DWord);
+ 
+  DWord temp_ebp = *(DWord*)register_ebp;
+  /* Prepare child stack for context switch */
+  uchild->task.kernel_esp-=sizeof(DWord);
+  *(DWord*)(uchild->task.kernel_esp)=(DWord)&ret_from_fork;
+  uchild->task.kernel_esp-=sizeof(DWord);
+  *(DWord*)(uchild->task.kernel_esp)=temp_ebp;
 
-  pcb->task.PID = pids;
-  pids++;
+  INIT_LIST_HEAD(&(schild->child_list));
+  list_add( &(schild->anchor), &current()->child_list);
+ 
+  schild->PID=pids++;
+  schild->quantum=DEFAULT_QUANTUM;
 
-  INIT_LIST_HEAD(&(pcb->task.child_list));
-
- 	//(union task_union*)list_head_to_task_struct(current()->child_list);
-	
-  list_add_tail(&(pcb->task.child_anchor), &(current()->child_list));
-
-    struct list_head* it;
-    list_for_each(it, &current()->child_list)
-	{
-        struct task_struct *pcb_child = list_entry(it, struct task_struct, child_list);	
-	    char * buffer = "\0\0\0\0\0";
-        itoa(pcb_child->PID, buffer);
-        printk(buffer);
-    }
-
-  list_add_tail(free, &readyqueue);
-  return pcb->task.PID;
+  struct list_head *it; 
+  list_for_each( it, &current()->child_list ) {
+    struct task_struct *child = list_head_to_task_struct(it);  
+    char *buffer = "\0\0\0\0\0";
+    itoa(child->PID, buffer);
+    printk("\n");  printk("child_list pid ");
+    printk(buffer);
+ } 
+ 
+  /* Queue child process into readyqueue */
+  list_add_tail(&(schild->list), &readyqueue);
+  
+  return uchild->task.PID;
 }
 
 void sys_exit()
@@ -203,12 +209,10 @@ void sys_block()
   {	
     struct list_head* list = &current()->list;
     list_del(list);
-	list_add_tail(list, &blocked);
+    list_add_tail(list, &blocked);
     sched_next_rr();
-    }
+  }
 }
-
-
 
 
 int sys_unblock(int pid)
@@ -219,8 +223,7 @@ int sys_unblock(int pid)
         struct task_struct *pcb_child = list_head_to_task_struct(it);	
 /*	    char * buffer = "\0\0\0\0\0";
         itoa(pcb_child->PID, buffer);
-        printk(buffer);
-*/
+       printk(buffer); printk("\n");
         if (pcb_child->PID == pid) {
             if (list_first(&(pcb_child->list)) == list_first(&blocked)) {
                 //desbloquearlo
@@ -238,20 +241,4 @@ int sys_unblock(int pid)
     //ESTO TIENE QUE SER -1 !!!!
     return 33;
 }
-/*
- * 
- *
- :	 * if ((pid is current()->child) && process_pid is blocked) {
-	 *	desbloquejar (readyqueue nosek);
-	 *	return 0;
-	 * }
-	 * if (process_pid is NOT blocked) {
-	 *	pending_unblocks++;
-	 * 	return 0;
-	 * }
-	 * 
-	 * return -1; 
-	*/	
-
-
 
