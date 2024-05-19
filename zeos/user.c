@@ -74,7 +74,7 @@ int __attribute__ ((__section__(".text.main")))
     itoa(ret, fubber);
     print(fubber);
     */  
- 
+/* 
  int pid2 = fork();
        if (pid2 == 0)
        {
@@ -91,7 +91,7 @@ int __attribute__ ((__section__(".text.main")))
         itoa(getpid(), bufferPD);
         write(1, bufferPD, 6);
        }
- 
+ */
   /* Funcio que provoca un page fault exception */
   //pf(); 
 

@@ -117,7 +117,7 @@ void inner_task_switch(union task_union *new)
   set_cr3(get_DIR((struct task_struct*)new));
 
   set_esp(new->task.kernel_esp);
-  quantum_left=current()->quantum;
+  //quantum_left=current()->quantum;
 }
 
 void init_sched()
@@ -220,7 +220,7 @@ void schedule()
 
 //EXAMEN
 
-/*
+
 int needs_sched_rr(void)
 {
   if ((quantum_left == 0) && (!list_empty(&readyqueue))) 
@@ -237,7 +237,7 @@ void update_process_state_rr(struct task_struct *t, struct list_head *dst_queue)
   if (dst_queue != NULL) 
     list_add_tail(&t->list, dst_queue);
 }
-
+/*
 void sched_next_rr (void)
 {
   struct task_struct *next_task;
@@ -252,8 +252,26 @@ void sched_next_rr (void)
   quantum_left = get_quantum(next_task);
 
   task_switch((union task_union*)next_task);
-}
+}*/
+void sched_next_rr (void)
+{
+  struct task_struct *next_task;
+  struct list_head *ready;
 
+  if (list_empty(&readyqueue)) 
+    next_task = idle_task;
+  else {
+    ready = list_first(&readyqueue);
+    //list_del(ready);
+    
+    next_task = list_head_to_task_struct(ready);
+}
+  quantum_left = get_quantum(current());
+  
+  update_process_state_rr(next_task, NULL);
+
+  task_switch((union task_union*)next_task);
+}
 void schedule()
 {
   update_sched_data_rr();
@@ -262,7 +280,7 @@ void schedule()
     update_process_state_rr(current(), &readyqueue);
     sched_next_rr();
   }
-}*/
+}
 
 
 
@@ -270,7 +288,7 @@ void schedule()
 
 
 //ROGER
-
+/*
 int needs_sched_rr(void)
 {
   if ((remaining_quantum==0)&&(!list_empty(&readyqueue))) return 1;
@@ -326,4 +344,4 @@ void schedule()
     update_process_state_rr(current(), &readyqueue);
     sched_next_rr();
   }
-}
+}*/
