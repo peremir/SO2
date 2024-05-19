@@ -115,7 +115,7 @@ void inner_task_switch(union task_union *new)
 
   /* TLB flush. New address space */
   set_cr3(get_DIR((struct task_struct*)new));
-
+  current()->kernel_esp = get_ebp();
   set_esp(new->task.kernel_esp);
   //quantum_left=current()->quantum;
 }
