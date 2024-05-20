@@ -15,6 +15,8 @@
 
 #include <errno.h>
 
+#include <interrupt.h>
+
 #define LECTURA 0
 #define ESCRIPTURA 1
 
@@ -165,7 +167,7 @@ int sys_fork()
  
   schild->PID=pids++;
   schild->quantum=DEFAULT_QUANTUM;
-
+/*
   struct list_head *it; 
   list_for_each( it, &current()->child_list ) {
     struct task_struct *child = list_head_to_task_struct(it);  
@@ -173,7 +175,7 @@ int sys_fork()
     itoa(child->PID, buffer);
     printk("\n");  printk("child_list pid ");
     printk(buffer);
- } 
+ } */
  
   /* Queue child process into readyqueue */
   list_add_tail(&(schild->list), &readyqueue);
@@ -221,10 +223,8 @@ int sys_unblock(int pid)
     list_for_each(it, &(current()->child_list))
 	{
         struct task_struct *pcb_child = list_head_to_task_struct(it);	
-/*	    char * buffer = "\0\0\0\0\0";
-        itoa(pcb_child->PID, buffer);
-       printk(buffer); printk("\n");
-        if (pcb_child->PID == pid) {
+	if (pcb_child->PID == pid) 
+	{
             if (list_first(&(pcb_child->list)) == list_first(&blocked)) {
                 //desbloquearlo
                 struct list_head * l = &(pcb_child->list);
@@ -233,12 +233,50 @@ int sys_unblock(int pid)
                 return 0;
             }
             else {
-                pending_unblocks++;
+		pending_unblocks++;
                 return 0;
             }
         }
-   */ }
+    }
     //ESTO TIENE QUE SER -1 !!!!
-    return 33;
+    return -1;
 }
 
+
+int sys_read(char *b, int maxchars) {
+    if (maxchars <= 0) return EINVAL;
+    if (!access_ok(VERIFY_WRITE, b, maxchars)) return EFAULT;
+    
+    struct task_struct *t = current();
+
+    t->circ_buff_chars_to_read = maxchars;
+    t->circ_buff_maxchars = maxchars;
+
+    // poner proceso en blocked para que el scheduler no le pille.
+    update_process_state_rr(t, &blocked);
+    
+    int diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
+    char buff[TAM_BUF];
+    while (t->circ_buff_chars_to_read > 0) {
+        sched_next_rr();
+
+        int i = 0;
+        char c = circ_buff_read();
+        while (c != '\0') {
+            buff[i] = c;
+            ++i;
+            c = circ_buff_read();
+        }
+
+        copy_to_user(buff, b + diff, i);
+
+        diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
+    }
+
+    copy_to_user((void*)"\0", b+diff, 1);
+
+    update_process_state_rr(current(), &readyqueue);
+    sched_next_rr();
+
+    return maxchars;
+}

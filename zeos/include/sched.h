@@ -23,6 +23,9 @@ struct task_struct {
   struct list_head child_list;  //Llista de tots els fills
   struct list_head anchor;      //Anchor per si el proces es fill d'algun pare
   struct task_struct *parent;
+  int circ_buff_chars_to_read;
+  int circ_buff_maxchars;
+
 };
 
 union task_union {

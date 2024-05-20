@@ -9,6 +9,7 @@
 #include <libc.h>
 #include <entry.h>
 #include <sched.h>
+#include <devices.h>
 
 #include <zeos_interrupt.h>
 
@@ -109,7 +110,7 @@ void setIdt()
   set_idt_reg(&idtR);
 }
 
-
+/*
 void keyboardService()
 {
   unsigned char key = inb(0x60);
@@ -126,7 +127,47 @@ void keyboardService()
       printc_xy(0,0,'C');
     }
   }
-}
+} */
+
+void keyboardService () {
+     int scan_code;
+    char key, is_break, c;
+    const char  msb_mask = 0x80,
+          scan_code_mask = 0x7F,
+          not_ascii_char = 'C';
+
+    key = inb(0x60); // Llegim el regisre
+    is_break = (key & msb_mask) >> 7; // Make = 0, Break = 1
+
+    //Only continue when the action of the keyboard is Make
+    if (is_break) return;
+
+    scan_code = key & scan_code_mask;
+    c = char_map[scan_code];
+
+    if (c == '\0') c = not_ascii_char;
+
+    printc_xy(0, 0, c);
+
+    // if no processes are blocked waiting for the keyboard input, nothing more needs to be done
+    if (list_empty(&blocked)) return;
+
+    struct list_head *l = list_first(&blocked);
+    struct task_struct *t = list_head_to_task_struct(l);
+
+    circ_buff_append(c);
+
+    if (t->circ_buff_chars_to_read > 0) {
+        t->circ_buff_chars_to_read--;
+
+        // mirar si buffer lleno
+        if (t->circ_buff_chars_to_read == 0 || circ_buff_is_full()) {
+            task_switch((union task_union*)t);
+        }
+    } 
+
+} 
+
 
 void clockRoutine() 
 {
@@ -220,7 +261,46 @@ void pf_routine(int error, int eip)
 }
 */
 
+char circ_buffer[TAM_BUF];
+char *circ_buff_head = &circ_buffer[0];
+char *circ_buff_tail = &circ_buffer[0];
+int circ_buff_num_items = 0;
 
+char circ_buff_append(char c) {
+    if (circ_buff_is_full()) {
+        return -1;
+    }
 
+    *circ_buff_head = c;
+    circ_buff_head++;
+    circ_buff_num_items++;
 
+    if (circ_buff_head == &circ_buffer[TAM_BUF]) {
+        circ_buff_head = &circ_buffer[0];
+    }
+
+    return 1;
+}
+
+char circ_buff_read() {
+    // se mira esta vacio
+    if (circ_buff_num_items == 0) {
+        return '\0';
+    }
+
+    char c = *circ_buff_tail;
+
+    circ_buff_tail++;
+    circ_buff_num_items--;
+
+    if (circ_buff_tail == &circ_buffer[TAM_BUF]) {
+        circ_buff_tail = &circ_buffer[0];
+    }
+
+    return c;
+}
+
+char circ_buff_is_full() {
+    return circ_buff_num_items == TAM_BUF;
+}
 

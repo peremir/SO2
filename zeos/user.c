@@ -28,7 +28,15 @@ int __attribute__ ((__section__(".text.main")))
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
-
+    char b[4];
+    int err = read(b, 4);
+    
+    char *buff = "\0\0\0\0\0\0";
+    itoa(err, buff);
+    print(buff);
+    
+    print(b);
+    print("\n");
 
   /* Funcio addAsm suma en assembly */
   //int x = addAsm(0x42, 0x666);  
@@ -50,10 +58,11 @@ int __attribute__ ((__section__(".text.main")))
   write(1, buffer2, 6);    */ 
   
   //Test de la syscall fork feta amb sysenter
+  
   int pid = fork();
   if (pid == 0)
   { 
-
+    //block();
     char *bufferC = "\0\0\0\0\0";
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
@@ -66,32 +75,33 @@ int __attribute__ ((__section__(".text.main")))
     write(1, "\nPARENT Getpid: ", 16);
     itoa(getpid(), bufferP);
     write(1, bufferP, strlen(bufferP));
+
+    
   }
-       
-    /*
-    int ret = unblock(2);
+
+/*  int ret = unblock(2);
     char *fubber = "\0\0\0\0\0";
     itoa(ret, fubber);
-    print(fubber);
-    */  
- 
+    print(fubber); */
+/*
  int pid2 = fork();
        if (pid2 == 0)
        {
-        char *bufferCD = "\0\0\0\0\0\0";
         //block();
+	char *bufferCD = "\0\0\0\0\0\0";
         write(1, "\n   CHILD2 Getpid: ", 19);
         itoa(getpid(), bufferCD);
         write(1, bufferCD, 6);
         }
         else if(pid2 > 0)
         {
-        char *bufferPD = "\0\0\0\0\0\0";
+        //unblock(2);
+	char *bufferPD = "\0\0\0\0\0\0";
         write(1, "\n   PARENT2 Getpid: ", 19);
         itoa(getpid(), bufferPD);
         write(1, bufferPD, 6);
        }
- 
+ */
   /* Funcio que provoca un page fault exception */
   //pf(); 
 
