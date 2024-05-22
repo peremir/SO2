@@ -126,6 +126,7 @@ void init_sched()
 
   INIT_LIST_HEAD(&freequeue);
   INIT_LIST_HEAD(&readyqueue);
+  INIT_LIST_HEAD(&blocked);
 
   for (int i = 0; i < NR_TASKS; i++) {
     list_add_tail(&(task[i].task.list),&freequeue);
@@ -190,8 +191,8 @@ void sched_next_rr (void)
     //list_del(ready);
     
     next_task = list_head_to_task_struct(ready);
-}
-  quantum_left = get_quantum(current());
+  }
+  quantum_left = get_quantum(next_task);
   
   update_process_state_rr(next_task, NULL);
 

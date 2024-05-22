@@ -130,7 +130,7 @@ void keyboardService()
 } */
 
 void keyboardService () {
-     int scan_code;
+    int scan_code;
     char key, is_break, c;
     const char  msb_mask = 0x80,
           scan_code_mask = 0x7F,
@@ -149,20 +149,21 @@ void keyboardService () {
 
     printc_xy(0, 0, c);
 
+    circ_buff_append(c);
     // if no processes are blocked waiting for the keyboard input, nothing more needs to be done
     if (list_empty(&blocked)) return;
 
     struct list_head *l = list_first(&blocked);
     struct task_struct *t = list_head_to_task_struct(l);
 
-    circ_buff_append(c);
 
     if (t->circ_buff_chars_to_read > 0) {
         t->circ_buff_chars_to_read--;
 
         // mirar si buffer lleno
         if (t->circ_buff_chars_to_read == 0 || circ_buff_is_full()) {
-            task_switch((union task_union*)t);
+            update_process_state_rr(t, &readyqueue);
+            sched_next_rr();
         }
     } 
 
