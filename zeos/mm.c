@@ -29,7 +29,7 @@ page_table_entry pagusr_table[NR_TASKS][TOTAL_PAGES]
 /* TSS */
 TSS         tss; 
 
-
+unsigned int pcbs_in_dir[NR_TASKS];
 
 /***********************************************/
 /************** PAGING MANAGEMENT **************/
@@ -48,6 +48,7 @@ for (i = 0; i< NR_TASKS; i++) {
   dir_pages[i][ENTRY_DIR_PAGES].bits.rw = 1;
   dir_pages[i][ENTRY_DIR_PAGES].bits.present = 1;
 
+  pcbs_in_dir[i] = 0;
 }
 
 }
@@ -263,4 +264,22 @@ void del_ss_pag(page_table_entry *PT, unsigned logical_page)
 /* get_frame - Returns the physical frame associated to page 'logical_page' */
 unsigned int get_frame (page_table_entry *PT, unsigned int logical_page){
      return PT[logical_page].bits.pbase_addr; 
+}
+
+DWord* get_new_stack(page_table_entry *PT) {
+    DWord free_page = get_free_page(PT);
+    DWord free_frame = alloc_frame();
+
+    if (free_page < 0 || free_frame < 0) return 0;
+
+    set_ss_pag(PT, free_page, free_frame);
+
+    return (DWord*)(free_page<<12);
+}
+
+int get_free_page(page_table_entry *pt) {
+    DWord init_offset = NUM_PAG_KERNEL + NUM_PAG_DATA + NUM_PAG_CODE;
+    for (int p = init_offset; p < TOTAL_PAGES; ++p)
+        if (pt[p].bits.present == 0) return p;
+    return -1;
 }

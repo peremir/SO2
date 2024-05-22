@@ -162,7 +162,8 @@ void keyboardService () {
 
         // mirar si buffer lleno
         if (t->circ_buff_chars_to_read == 0 || circ_buff_is_full()) {
-            task_switch((union task_union*)t);
+                //update_process_state_rr(current(), &readyqueue);	
+		task_switch((union task_union*)t);
         }
     } 
 

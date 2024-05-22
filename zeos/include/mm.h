@@ -33,6 +33,8 @@ extern Descriptor  *gdt;
 
 extern TSS         tss; 
 
+extern unsigned int pcbs_in_dir[NR_TASKS];
+
 void init_mm();
 void set_cr3(page_table_entry *dir);
 

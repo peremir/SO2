@@ -151,4 +151,46 @@ ENTRY(read)
 rd_fin:
 	pop    %ebx
 	pop    %ebp
-	ret 
+	ret
+
+ENTRY (create_thread)
+	push   %ebp
+	mov    %esp, %ebp
+	push   %ebx
+	mov    8(%ebp), %edx		// 1) Pas de Parámetres
+	mov    12(%ebp), %ecx
+	mov    $12, %eax			// 2) Dir quin servei ès
+	int    $0x80			// 3) INT
+	cmpl   $0, %eax
+	jge    ct_fin        
+	movl   %eax, errno		// 4) Tractament d'errors - Save errno to eax
+	mov    $-1, %eax
+ct_fin:
+	pop    %ebx
+	pop    %ebp
+	ret
+
+
+
+ENTRY (exit_thread)
+    pushl %ebp
+    movl %esp, %ebp
+
+    movl $13, %eax // id de la syscall exit() -> 1
+
+    pushl $ext_thr_return_user // @ a la que sysenter debe devolver
+    pushl %ebp              // el ebp actual, que debera usarse al volver
+    movl %esp, %ebp
+
+    sysenter                // saltamos a la primera entrada de la sys_call_table
+
+    // Exit no devuelve error. Es más, nunca devuelve por donde
+    // se la ha llamado. Por lo tanto, las siguientes lineas de
+    // codigo nunca se ejecutan.
+
+ext_thr_return_user:
+    popl %ebp
+    add $4, %esp // pop of return address.
+
+    leave
+    ret 

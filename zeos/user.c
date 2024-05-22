@@ -14,6 +14,11 @@ void print(char *buffer)
   write(1, buffer, strlen(buffer));
 }
 
+void func(int i)
+{
+  print("\nHOLA SOY UN THREAD");
+}
+
 void pf()
 {
   char *p = 0;
@@ -28,16 +33,19 @@ int __attribute__ ((__section__(".text.main")))
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
-    char b[4];
-    int err = read(*b, 4);
-    
-    char *buff = "\0\0\0\0\0\0";
-    itoa(err, buff);
-    print(buff);
-    
-    print(b);
-    print("\n");
+    /*
+    int i = 0;
+    create_thread((void*)func, &i);
+    */
 
+    
+    char b[4];
+    read(b, 4);
+    print("\n");
+    print(b);
+    
+    
+    
   /* Funcio addAsm suma en assembly */
   //int x = addAsm(0x42, 0x666);  
   
@@ -62,12 +70,14 @@ int __attribute__ ((__section__(".text.main")))
   int pid = fork();
   if (pid == 0)
   { 
-    //block();
+  
+		  //block();
     char *bufferC = "\0\0\0\0\0";
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
     write(1, bufferC, strlen(bufferC));
-
+    
+   
   }
   else if(pid > 0)
   {  

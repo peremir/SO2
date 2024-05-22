@@ -13,9 +13,6 @@ extern struct list_head blocked;
 struct task_struct * idle_task;
 extern int quantum_left;
 
-
-int pids;
-
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
 
@@ -126,6 +123,8 @@ void init_sched()
 
   INIT_LIST_HEAD(&freequeue);
   INIT_LIST_HEAD(&readyqueue);
+  INIT_LIST_HEAD(&blocked);
+
 
   for (int i = 0; i < NR_TASKS; i++) {
     list_add_tail(&(task[i].task.list),&freequeue);
