@@ -275,9 +275,11 @@ int sys_read(char *b, int maxchars) {
 
     copy_to_user((void*)"\0", b+diff, 1);
 
-    update_process_state_rr(current(), &readyqueue);
-    sched_next_rr();
-
+    //list_del(ready);
+    //update_process_state_rr(current(), &readyqueue);
+    //sched_next_rr();
+    
+    //list_del(&current()->list);
     return maxchars;
 }
 

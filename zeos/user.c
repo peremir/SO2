@@ -37,14 +37,11 @@ int __attribute__ ((__section__(".text.main")))
     int i = 0;
     create_thread((void*)func, &i);
     */
-
-    
     char b[4];
-    read(b, 4);
+    int err = read(b, 4);
+    
     print("\n");
     print(b);
-    
-    
     
   /* Funcio addAsm suma en assembly */
   //int x = addAsm(0x42, 0x666);  
