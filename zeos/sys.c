@@ -219,244 +219,130 @@ void sys_block()
 
 int sys_unblock(int pid)
 {
-    struct list_head* it;
-    list_for_each(it, &(current()->child_list))
-	{
-        struct task_struct *pcb_child = list_head_to_task_struct(it);	
-	if (pcb_child->PID == pid) 
-	{
-            if (list_first(&(pcb_child->list)) == list_first(&blocked)) {
-                //desbloquearlo
-                struct list_head * l = &(pcb_child->list);
-                list_del(l);
-                list_add_tail(l, &readyqueue);
-                return 0;
-            }
-            else {
-		pending_unblocks++;
-                return 0;
-            }
-        }
+  struct list_head* it;
+  list_for_each(it, &(current()->child_list))
+  {
+    struct task_struct *pcb_child = list_head_to_task_struct(it);	
+    if (pcb_child->PID == pid) 
+    {
+      if (list_first(&(pcb_child->list)) == list_first(&blocked)) 
+      {
+        //desbloquearlo
+        struct list_head * l = &(pcb_child->list);
+        list_del(l);
+        list_add_tail(l, &readyqueue);
+        return 0;
+      }
+      else 
+      {
+        pending_unblocks++;
+        return 0;
+      }
     }
-    //ESTO TIENE QUE SER -1 !!!!
-    return -1;
-}
-
-
-int sys_read(char *b, int maxchars) {
-    if (maxchars <= 0) return EINVAL;
-    if (!access_ok(VERIFY_WRITE, b, maxchars)) return EFAULT;
-    
-    struct task_struct *t = current();
-
-    t->circ_buff_chars_to_read = maxchars;
-    t->circ_buff_maxchars = maxchars;
-
-    // poner proceso en blocked para que el scheduler no le pille.
-    update_process_state_rr(t, &blocked);
-    
-    int diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
-    char buff[TAM_BUF];
-    while (t->circ_buff_chars_to_read > 0) {
-        sched_next_rr();
-
-        int i = 0;
-        char c = circ_buff_read();
-        while (c != '\0') {
-            buff[i] = c;
-            ++i;
-            c = circ_buff_read();
-        }
-
-        copy_to_user(buff, b + diff, i);
-
-        diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
-    }
-
-    copy_to_user((void*)"\0", b+diff, 1);
-
-    //list_del(ready);
-    //update_process_state_rr(current(), &readyqueue);
-    //sched_next_rr();
-    
-    //list_del(&current()->list);
-    return maxchars;
-}
-
-
-int sys_create_thread(void (*start_routine)(void* arg), void *parameter) {
-    if (list_empty(&freequeue)) {
-        return ENOMEM;
-    }
-
-    if (!access_ok(VERIFY_READ, start_routine, sizeof(void*))) {
-        return EFAULT;
-    }
-
-    // if (!access_ok(VERIFY_READ, parameter, sizeof(void*))) {
-    //     return EFAULT;
-    // }
-
-    struct list_head *free_list_pos = list_first(&freequeue);
-    list_del(free_list_pos);
-
-    struct task_struct* pcb = list_head_to_task_struct(free_list_pos);
-    union task_union* pcb_union = (union task_union*)pcb;
-
-    copy_data(current(), pcb_union, sizeof(union task_union));
-
-    int dir_pos = ((int)get_DIR(pcb)-(int)dir_pages)/(sizeof(page_table_entry)*TOTAL_PAGES);
-    pcbs_in_dir[dir_pos]++;
-
-    DWord *new_stack = get_new_stack(get_PT(pcb));
-    if (new_stack == NULL) return ENOMEM;
-
-    DWord *base_stack = &(pcb_union->stack[KERNEL_STACK_SIZE]);
-
-    new_stack[(PAGE_SIZE/4)-1] = (DWord)parameter;
-    new_stack[(PAGE_SIZE/4)-2] = (DWord)0; // evil floating point bit level hacking
-
-    pcb->kernel_esp = &(pcb_union->stack[KERNEL_STACK_SIZE-19]); // 17-2 por el @ret_from_fork y el ebp.
-    pcb_union->stack[KERNEL_STACK_SIZE-19] = 0;
-    pcb_union->stack[KERNEL_STACK_SIZE-18] = (DWord)ret_from_fork;
-
-    base_stack[-5] = (DWord)start_routine;
-    base_stack[-2] = (DWord)&new_stack[(PAGE_SIZE/4)-2];
-
-    list_add_tail(free_list_pos, &readyqueue);
-
-    return 0;
-}
-
-void sys_exit_thread(void) {
-    struct task_struct* t = current();
-
-    // TODO reemplazar esto con bithack raro para pillar
-    // la página del esp. Esto borra todo lo que hay después de
-    // las páginas de código en la tabla de páginas.
-    // del_ss_extra_pages(get_PT(t));
-
-    union task_union* t_union = (union task_union*)t;
-    DWord *base_stack = &(t_union->stack[KERNEL_STACK_SIZE]);
-
-    DWord page = base_stack[-2] >> 12;
-
-    del_ss_pag(get_PT(t), page);
-
-    sys_exit();
-}
-
-/*
-int sys_threadCreateWithStack(void (*function)(void* arg), int N, void* parameter) {
-// 1er, comprovem paràmetres
-  if (N <= 0) // N > 0, perquè si no, no es pot fer crida
-  	return -EINVAL;
-  
-  if (function == NULL) // La funció ha d'apuntar a algun lloc (!= NUll)
-  	return -EINVAL;
-  
-  
-  struct list_head *lhcurrent = NULL;
-  union task_union *uchild;
-  
-  // Any free task_struct? 
-  if (list_empty(&freequeue)) return -ENOMEM;
-
-  lhcurrent=list_first(&freequeue);
-  
-  list_del(lhcurrent);
-  
-  uchild=(union task_union*)list_head_to_task_struct(lhcurrent);
-  
-  // Copy the parent's task struct to child's 
-  copy_data(current(), uchild, sizeof(union task_union)); // això inclou posicions pila usuari (rang; data és a taula pàg.)!
-  
-  // Ara cerquem en la taula de pàgines espai per la pila de N posicions, i en cas que sí, veiem si podem reservar N frames de la memòria física per la pila (ho farem des d'abaix, perquè la part de dalt l'utilitzi mem. dinàmica) 
-  page_table_entry *process_PT = get_PT(current()); // (és mateixa per thread pare i fill)
-  int pag, i;
-  for (pag = TOTAL_PAGES-1; pag-N >= -1;){
-  
-    char ocupat = 0;
-    for (i = pag; !ocupat && i > pag-N; --i){ // mirem N pàgines consecutives
-    	if ( has_frame(process_PT, i) )
-    		ocupat = 1;
-    }
-    		
-    if (!ocupat){ // espai lliure, intentem reservar-hi frames pila
-    	int new_ph_pag;
-    
-    	for (i = pag; i > pag-N; --i)
-	  {
-	    new_ph_pag=alloc_frame();
-	    if (new_ph_pag!=-1) // One page allocated 
-  // Any free task_struct?
-  if (list_empty(&freequeue)) return -ENOMEM;
-
-  lhcurrent=list_first(&freequeue);
-
-  list_del(lhcurrent);
-	    {
-	      set_ss_pag(process_PT, i, new_ph_pag);
-	    }
-	    else // No more free pages left. Deallocate everything 
-	    {
-	      // Deallocate allocated pages. Up to pag. 
-	      for (int j = pag; j > i; --j)
-	      {
-		free_frame(get_frame(process_PT, j));
-		del_ss_pag(process_PT, j);
-	      }
-	      // Deallocate task_struct
-	      list_add_tail(lhcurrent, &freequeue);
-	      
-	      // Return error
-	      return -EAGAIN; 
-	    }
-	  }
-	// Si aquí, hem aconseguit fer reserva, així que guardem rang pila
-	//printk("\nEntra:");
-	//char buff[24]; itoa(pag, buff);
-	//printk(buff);
-	uchild->task.stack_topPage = pag-N+1;
-	uchild->task.stack_bottomPage = pag;
-	pag = -2; // marca per sortir de bucle superior, indicant que ha estat per pila reservada
-	
-	  
-    }else
-    	pag = i; // Si pàgina de les N consecutives ocupada, ens la saltem i seguim mirant a partir d'aquí
   }
-  
-  if (pag != -2)
-  	return -EAGAIN; // si no marca, error; no hi ha entrades suficients en taula de pàg
-  
-  // Assignem TID i estat threat //
-  uchild->task.TID=++global_TID;
-  
-  // Preparem context hardware (=> modif. valors de regs guardats + pila usuari tingui al que apunten) //
-  // PROVAR 1ER SI ENTRA AL WRAPPER AMB AIXÒ (FALTA CONTEXT PILA PEER TASK SWITCH! (I OPTIMITZACIÓ SI MATEIX PROCÉS))
-  
-  // 1. Pila usuari
-  unsigned long * bottom_userStack = (unsigned long *)((uchild->task.stack_bottomPage << 12) + PAGE_SIZE-4);
-  *(bottom_userStack-2) = 0;        // Context
-  *(bottom_userStack-1) = function; // del
-  *bottom_userStack = parameter;    // thread_wrapper (0 és @retorn "dummy")
-  
-  // 2. Regs de context hardware
-  //0x001001f0
-  //uchild->stack[KERNEL_STACK_SIZE-5] = (unsigned long) &thread_wrapper; // eip
-  //uchild->stack[KERNEL_STACK_SIZE-4] = (unsigned long) &thread_wrapper; // cs (que apuntin a thread_wrapper)
-  uchild->stack[KERNEL_STACK_SIZE-5] = 0x00100c80; // eip
-  uchild->stack[KERNEL_STACK_SIZE-4] = 0x00100c80; // cs (que apuntin a thread_wrapper)
-  
-  uchild->stack[KERNEL_STACK_SIZE-2] = (unsigned long) (bottom_userStack - 2 ); // esp
-  uchild->stack[KERNEL_STACK_SIZE-1] = (unsigned long) (bottom_userStack - 2 ); // ss (que apuntin a @retorn = 0)
-  
-  // Perquè cal, guardem el kernel esp del fill perquè pugui executar després si task_switch cap a ell //
-  uchild->task.register_esp = (unsigned long) &uchild->stack[KERNEL_STACK_SIZE-18]; // per apuntar a %ebp salvat (i que el set_esp() el recuperi)
+    //ESTO TIENE QUE SER -1 !!!!
+   return -1;
+}
 
-  // Queue child process into readyqueue
-  list_add_tail(&(uchild->task.list), &readyqueue);
+
+int sys_read(char *b, int maxchars) 
+{
+  if (maxchars <= 0) 
+    return -EINVAL;
   
-  return uchild->task.TID;
-} */
+  if (!access_ok(VERIFY_WRITE, b, maxchars)) 
+    return -EFAULT;
+    
+  struct task_struct *t = current();
+
+  t->circ_buff_chars_to_read = maxchars;
+  t->circ_buff_maxchars = maxchars;
+
+  // poner proceso en blocked prk scheduler no el psoi
+  update_process_state_rr(t, &readblocked);
+    
+  int diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
+  char buff[TAM_BUF];
+  while (t->circ_buff_chars_to_read > 0) 
+  {
+    sched_next_rr();
+
+    int i = 0;
+    char c = circ_buff_read();
+    while (c != '\0') 
+    {
+      buff[i] = c;
+      ++i;
+      c = circ_buff_read();
+    }
+
+    copy_to_user(buff, b + diff, i);
+
+    diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
+  }
+
+  copy_to_user((void*)"\0", b+diff, 1);
+  
+  update_process_state_rr(t,NULL);  
+  //sched_next_rr();
+  
+  return maxchars;
+}
+
+
+int sys_create_thread(void (*start_routine)(void* arg), void *parameter) 
+{
+  if (list_empty(&freequeue)) 
+    return -ENOMEM;
+
+  if (!access_ok(VERIFY_READ, start_routine, sizeof(void*))) 
+    return -EFAULT;
+
+  struct list_head *free_list_pos = list_first(&freequeue);
+  list_del(free_list_pos);
+
+  struct task_struct* pcb = list_head_to_task_struct(free_list_pos);
+  union task_union* pcb_union = (union task_union*)pcb;
+
+  copy_data(current(), pcb_union, sizeof(union task_union));
+
+  int dir_pos = ((int)get_DIR(pcb)-(int)dir_pages)/(sizeof(page_table_entry)*TOTAL_PAGES);
+  pcbs_in_dir[dir_pos]++;
+
+  DWord *new_stack = get_new_stack(get_PT(pcb));
+  if (new_stack == NULL) 
+    return -ENOMEM;
+
+  DWord *base_stack = &(pcb_union->stack[KERNEL_STACK_SIZE]);
+
+  new_stack[(PAGE_SIZE/4)-1] = (DWord)parameter;
+  new_stack[(PAGE_SIZE/4)-2] = (DWord)0; 
+  
+  pcb->kernel_esp = &(pcb_union->stack[KERNEL_STACK_SIZE-19]); // 17-2 por el @ret_from_fork y el ebp.
+  
+  pcb_union->stack[KERNEL_STACK_SIZE-19] = 0;
+  pcb_union->stack[KERNEL_STACK_SIZE-18] = (DWord)ret_from_fork;   
+  
+  base_stack[-5] = (DWord)start_routine;
+  base_stack[-2] = (DWord)&new_stack[(PAGE_SIZE/4)-2];
+  base_stack[-5] = (DWord)start_routine;
+  
+  list_add_tail(free_list_pos, &readyqueue);
+
+  return 0;
+}
+
+void sys_exit_thread(void) 
+{
+  struct task_struct* t = current();
+    
+  union task_union* t_union = (union task_union*)t;
+  DWord *base_stack = &(t_union->stack[KERNEL_STACK_SIZE]);
+
+  DWord page = base_stack[-2] >> 12;
+
+  del_ss_pag(get_PT(t), page);
+
+  sys_exit();
+}
 

@@ -32,11 +32,7 @@ int __attribute__ ((__section__(".text.main")))
   /* This register is a privileged one, and so it will raise an exception */
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
-
-    /*
-    int i = 0;
-    create_thread((void*)func, &i);
-    */
+    
     char b[4];
     int err = read(b, 4);
     
@@ -63,29 +59,35 @@ int __attribute__ ((__section__(".text.main")))
   write(1, buffer2, 6);    */ 
   
   //Test de la syscall fork feta amb sysenter
-  
+  /*  
   int pid = fork();
   if (pid == 0)
   { 
-  
-		  //block();
+    block();
+    
     char *bufferC = "\0\0\0\0\0";
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
-    write(1, bufferC, strlen(bufferC));
-    
-   
+    write(1, bufferC, strlen(bufferC));   
   }
   else if(pid > 0)
-  {  
+  { 	  
     char *bufferP = "\0\0\0\0\0";
     write(1, "\nPARENT Getpid: ", 16);
     itoa(getpid(), bufferP);
     write(1, bufferP, strlen(bufferP));
-
     
+    char c[4];
+    int err = read(c, 4);
+    print("\n");
+    print(c);
+
+    unblock(pid);  
   }
 
+  int i = 0;
+  create_thread((void*)func, &i);
+  */
 /*  int ret = unblock(2);
     char *fubber = "\0\0\0\0\0";
     itoa(ret, fubber);

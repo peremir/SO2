@@ -110,63 +110,47 @@ void setIdt()
   set_idt_reg(&idtR);
 }
 
-/*
-void keyboardService()
+void keyboardService () 
 {
-  unsigned char key = inb(0x60);
+  char key, c;
+  key = inb(0x60); // Llegim el regisre
 
-  if((key & 0x80) != 0x80)
+  //make
+  if ((key & 0x80) == 0x80)  
+    return;
+
+  c = char_map[key];
+  if (c == '\0') 
+    c = 'C';
+
+  printc_xy(0, 0, c);
+
+  circ_buff_append(c);
+  // if no processes are blocked waiting for the keyboard input, nothing more needs to be done
+  if (list_empty(&readblocked)) 
+    return;
+
+  struct list_head *l = list_first(&readblocked);
+  struct task_struct *t = list_head_to_task_struct(l);
+
+  if (t->circ_buff_chars_to_read > 0) 
   {
+     if (t->circ_buff_maxchars == t->circ_buff_chars_to_read) {
+     //list_add_tail(current(), &readyqueue);
+     update_process_state_rr(current(), &readyqueue);
+     }
 
-    if(char_map[key] != '\0')
-    { 
-      printc_xy(0,0,char_map[key]);
-    }
-    else
+     t->circ_buff_chars_to_read--;
+
+    // mirar si buffer lleno
+    if (t->circ_buff_chars_to_read == 0) 
     {
-      printc_xy(0,0,'C');
+      return 0;
     }
-  }
-} */
-
-void keyboardService () {
-    int scan_code;
-    char key, is_break, c;
-    const char  msb_mask = 0x80,
-          scan_code_mask = 0x7F,
-          not_ascii_char = 'C';
-
-    key = inb(0x60); // Llegim el regisre
-    is_break = (key & msb_mask) >> 7; // Make = 0, Break = 1
-
-    //Only continue when the action of the keyboard is Make
-    if (is_break) return;
-
-    scan_code = key & scan_code_mask;
-    c = char_map[scan_code];
-
-    if (c == '\0') c = not_ascii_char;
-
-    printc_xy(0, 0, c);
-
-    circ_buff_append(c);
-    // if no processes are blocked waiting for the keyboard input, nothing more needs to be done
-    if (list_empty(&blocked)) return;
-
-    struct list_head *l = list_first(&blocked);
-    struct task_struct *t = list_head_to_task_struct(l);
-
-
-    if (t->circ_buff_chars_to_read > 0) {
-        t->circ_buff_chars_to_read--;
-
-        // mirar si buffer lleno
-        if (t->circ_buff_chars_to_read == 0 || circ_buff_is_full()) {
-            update_process_state_rr(t, &readyqueue);
-            sched_next_rr();
-        }
-    } 
-
+    //list_add(t, &readyqueue); //FALTA POSAR AL PRNCIPI
+      //sched_next_rr();
+	task_switch((union task_union *)t);
+  } 
 } 
 
 
@@ -267,41 +251,48 @@ char *circ_buff_head = &circ_buffer[0];
 char *circ_buff_tail = &circ_buffer[0];
 int circ_buff_num_items = 0;
 
-char circ_buff_append(char c) {
-    if (circ_buff_is_full()) {
-        return -1;
-    }
+char circ_buff_append(char c) 
+{
+  if (circ_buff_is_full()) 
+  {
+    return -1;
+  }
 
-    *circ_buff_head = c;
-    circ_buff_head++;
-    circ_buff_num_items++;
+  *circ_buff_head = c;
+  circ_buff_head++;
+  circ_buff_num_items++;
 
-    if (circ_buff_head == &circ_buffer[TAM_BUF]) {
-        circ_buff_head = &circ_buffer[0];
-    }
+  if (circ_buff_head == &circ_buffer[TAM_BUF]) 
+  {
+      circ_buff_head = &circ_buffer[0];
+  }
 
-    return 1;
+  return 1;
 }
 
-char circ_buff_read() {
-    // se mira esta vacio
-    if (circ_buff_num_items == 0) {
-        return '\0';
-    }
+char circ_buff_read() 
+{
+  // se mira esta vacio
+  if (circ_buff_num_items == 0) 
+  {
+    return '\0';
+  }
 
-    char c = *circ_buff_tail;
+  char c = *circ_buff_tail;
 
-    circ_buff_tail++;
-    circ_buff_num_items--;
+  circ_buff_tail++;
+  circ_buff_num_items--;
 
-    if (circ_buff_tail == &circ_buffer[TAM_BUF]) {
-        circ_buff_tail = &circ_buffer[0];
-    }
+  if (circ_buff_tail == &circ_buffer[TAM_BUF]) 
+  {
+    circ_buff_tail = &circ_buffer[0];
+  }
 
-    return c;
+  return c;
 }
 
-char circ_buff_is_full() {
-    return circ_buff_num_items == TAM_BUF;
+char circ_buff_is_full() 
+{
+  return circ_buff_num_items == TAM_BUF;
 }
 
