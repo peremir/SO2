@@ -17,6 +17,8 @@ void print(char *buffer)
 void func(int i)
 {
   print("\nHOLA SOY UN THREAD");
+
+  exit_thread();
 }
 
 void pf()
@@ -32,13 +34,19 @@ int __attribute__ ((__section__(".text.main")))
   /* This register is a privileged one, and so it will raise an exception */
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
+  /*  
+  char b[4];
+  int err = read(b, 4);
     
-    char b[4];
-    int err = read(b, 4);
-    
-    print("\n");
-    print(b);
-    
+  print("\n");
+  print(b);
+  */
+
+  int i = 0;
+  create_thread((void*)func, &i);
+
+
+  print("\nHola");
   /* Funcio addAsm suma en assembly */
   //int x = addAsm(0x42, 0x666);  
   
@@ -85,8 +93,6 @@ int __attribute__ ((__section__(".text.main")))
     unblock(pid);  
   }
 
-  int i = 0;
-  create_thread((void*)func, &i);
   */
 /*  int ret = unblock(2);
     char *fubber = "\0\0\0\0\0";

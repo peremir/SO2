@@ -325,7 +325,6 @@ int sys_create_thread(void (*start_routine)(void* arg), void *parameter)
   
   base_stack[-5] = (DWord)start_routine;
   base_stack[-2] = (DWord)&new_stack[(PAGE_SIZE/4)-2];
-  base_stack[-5] = (DWord)start_routine;
   
   list_add_tail(free_list_pos, &readyqueue);
 
