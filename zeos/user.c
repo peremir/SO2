@@ -29,11 +29,11 @@ int __attribute__ ((__section__(".text.main")))
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
     char b[4];
-    int err = read(b, 4);
+    int err = read(b, 2);
     
     char *buff = "\0\0\0\0\0\0";
-    itoa(err, buff);
-    print(buff);
+    //itoa(err, buff);
+    //print(buff);
     
     print(b);
     print("\n");
@@ -62,11 +62,11 @@ int __attribute__ ((__section__(".text.main")))
   int pid = fork();
   if (pid == 0)
   { 
-    //block();
+    block();
     char *bufferC = "\0\0\0\0\0";
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
-    write(1, bufferC, strlen(bufferC));
+    write(1, bufferC, strlen(bufferC)); 
 
   }
   else if(pid > 0)
@@ -75,7 +75,17 @@ int __attribute__ ((__section__(".text.main")))
     write(1, "\nPARENT Getpid: ", 16);
     itoa(getpid(), bufferP);
     write(1, bufferP, strlen(bufferP));
-
+    
+    char b[4];
+    int err = read(b, 4);
+    
+    char *buff = "\0\0\0\0\0\0";
+    //itoa(err, buff);
+    //print(buff);
+    
+    print(b);
+    print("\n");
+    unblock(pid);
     
   }
 

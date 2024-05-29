@@ -223,7 +223,7 @@ int sys_unblock(int pid)
     list_for_each(it, &(current()->child_list))
 	{
         struct task_struct *pcb_child = list_head_to_task_struct(it);	
-	if (pcb_child->PID == pid) 
+	    if (pcb_child->PID == pid) 
 	{
             if (list_first(&(pcb_child->list)) == list_first(&blocked)) {
                 //desbloquearlo
@@ -233,7 +233,7 @@ int sys_unblock(int pid)
                 return 0;
             }
             else {
-		pending_unblocks++;
+		        pending_unblocks++;
                 return 0;
             }
         }
@@ -255,6 +255,8 @@ int sys_read(char *b, int maxchars) {
     // poner proceso en blocked para que el scheduler no le pille.
     update_process_state_rr(t, &blocked);
     
+    //sys_block();
+
     int diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
     char buff[TAM_BUF];
     while (t->circ_buff_chars_to_read > 0) {
@@ -278,7 +280,6 @@ int sys_read(char *b, int maxchars) {
     //list_del(ready);
     //update_process_state_rr(current(), &readyqueue);
     //sched_next_rr();
-    
     //list_del(&current()->list);
     return maxchars;
 }

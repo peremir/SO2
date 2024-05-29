@@ -130,22 +130,17 @@ void keyboardService()
 } */
 
 void keyboardService () {
-    int scan_code;
-    char key, is_break, c;
-    const char  msb_mask = 0x80,
-          scan_code_mask = 0x7F,
-          not_ascii_char = 'C';
+    char key, c;
 
     key = inb(0x60); // Llegim el regisre
-    is_break = (key & msb_mask) >> 7; // Make = 0, Break = 1
+    //is_break = (key & msb_mask) >> 7; // Make = 0, Break = 1
 
     //Only continue when the action of the keyboard is Make
-    if (is_break) return;
+    if ((key & 0x80) == 0x80) return;
 
-    scan_code = key & scan_code_mask;
-    c = char_map[scan_code];
+    c = char_map[key];
 
-    if (c == '\0') c = not_ascii_char;
+    if (c == '\0') c = 'C';
 
     printc_xy(0, 0, c);
 
@@ -162,6 +157,7 @@ void keyboardService () {
 
         // mirar si buffer lleno
         if (t->circ_buff_chars_to_read == 0 || circ_buff_is_full()) {
+            //sys_unblock(t->PID);
             update_process_state_rr(t, &readyqueue);
             sched_next_rr();
         }
