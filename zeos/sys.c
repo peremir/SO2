@@ -217,6 +217,18 @@ void sys_block()
 }
 
 
+int is_blocked(struct task_struct * p) {
+    struct list_head * it;
+    list_for_each(it, &blocked) {
+        struct task_struct* bl_process = list_head_to_task_struct(it);
+        if (&bl_process->list == &p->list) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
 int sys_unblock(int pid)
 {
   struct list_head* it;
@@ -225,7 +237,8 @@ int sys_unblock(int pid)
     struct task_struct *pcb_child = list_head_to_task_struct(it);	
     if (pcb_child->PID == pid) 
     {
-      if (list_first(&(pcb_child->list)) == list_first(&blocked)) 
+      //if (list_first(&(pcb_child->list)) == list_first(&blocked)) 
+      if (is_blocked(pcb_child))
       {
         //desbloquearlo
         struct list_head * l = &(pcb_child->list);
