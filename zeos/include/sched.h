@@ -13,6 +13,7 @@
 #define KERNEL_STACK_SIZE	1024
 
 #define DEFAULT_QUANTUM 10
+#define MAX_MUTEXES 10
 
 struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
@@ -33,7 +34,14 @@ union task_union {
   unsigned long stack[KERNEL_STACK_SIZE];    /* pila de sistema, per procés */
 };
 
+struct mutex_t {
+    int count;
+    struct list_head blocked_queue;
+};
+
+
 extern union task_union task[NR_TASKS]; /* Vector de tasques */
+extern struct mutex_t mutexes[MAX_MUTEXES];
 
 extern struct list_head freequeue;
 extern struct list_head readyqueue;
@@ -76,5 +84,7 @@ void update_process_state_rr(struct task_struct *t, struct list_head *dest);
 int needs_sched_rr();
 void update_sched_data_rr();
 void schedule();
+
+struct mutex_t* mutex_get(int id);
 
 #endif  /* __SCHED_H__ */

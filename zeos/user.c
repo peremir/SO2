@@ -3,22 +3,32 @@
 char buff[24];
 
 int pid;
+int mutex = 0;
 
 int addAsm(int par1, int par2);
 int write(int fd, char * buffer, int size);
 unsigned int gettime();
 int getpid();
 
+
 void print(char *buffer)
 {
   write(1, buffer, strlen(buffer));
 }
 
+void printNum(int num)
+{
+  char *numBuff = "\0\0\0\0\0\0";
+  itoa(num, numBuff);
+  print(numBuff);
+}
+
 void func(int i)
 {
-  print("\nHOLA SOY UN THREAD");
-
-  exit_thread();
+  
+	print("\nHOLA SOY UN THREAD");
+    
+	exit_thread();
 }
 
 void pf()
@@ -41,12 +51,9 @@ int __attribute__ ((__section__(".text.main")))
   print("\n");
   print(b);
   */
-
-  int i = 0;
-  create_thread((void*)func, &i);
-
-
-  print("\nHola");
+  
+  //create_thread((void*)func, 0);
+  
   /* Funcio addAsm suma en assembly */
   //int x = addAsm(0x42, 0x666);  
   
@@ -65,18 +72,19 @@ int __attribute__ ((__section__(".text.main")))
   write(1, "\nGetpid: ", 9); 
   itoa(getpid(), buffer2);
   write(1, buffer2, 6);    */ 
-  
+
   //Test de la syscall fork feta amb sysenter
-  /*  
+/*
   int pid = fork();
   if (pid == 0)
   { 
-    block();
+    //block();
     
     char *bufferC = "\0\0\0\0\0";
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
     write(1, bufferC, strlen(bufferC));   
+
   }
   else if(pid > 0)
   { 	  
@@ -85,15 +93,10 @@ int __attribute__ ((__section__(".text.main")))
     itoa(getpid(), bufferP);
     write(1, bufferP, strlen(bufferP));
     
-    char c[4];
-    int err = read(c, 4);
-    print("\n");
-    print(c);
-
-    unblock(pid);  
+        //unblock(pid);  
   }
-
-  */
+*/
+  
 /*  int ret = unblock(2);
     char *fubber = "\0\0\0\0\0";
     itoa(ret, fubber);

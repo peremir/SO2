@@ -28,6 +28,7 @@ int get_free_page(page_table_entry *PT);
 void free_user_pages(struct task_struct *task);
 void del_ss_extra_pages(page_table_entry *PT);
 void abort_copy(struct task_struct *parent, struct task_struct *child);
+int get_DIR_pos(struct task_struct *t);
 
 extern Descriptor  *gdt;
 

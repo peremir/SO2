@@ -283,3 +283,7 @@ int get_free_page(page_table_entry *pt) {
         if (pt[p].bits.present == 0) return p;
     return -1;
 }
+
+int get_DIR_pos(struct task_struct *t) {
+    return ((int)get_DIR(t)-(int)dir_pages)/(sizeof(page_table_entry)*TOTAL_PAGES);
+}

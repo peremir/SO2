@@ -55,22 +55,6 @@ write_fin:
 	pop    %ebp
 	ret 
 
-/* int write(int fd, char *buffer, int size) 
-ENTRY(write)
-	pushl %ebp
-	movl %esp, %ebp
-	pushl %ebx;  // Save EBX, ESI and EDI if modified
-	movl $4, %eax
-	movl 0x8(%ebp), %ebx;	//fd
-	movl 0xC(%ebp), %ecx;	//buffer
-	movl 0x10(%ebp), %edx;	//size
-	call syscall_sysenter
-	popl %ebx
-	test %eax, %eax
-	js nok	// if (eax < 0) -> 
-	popl %ebp
-	ret */
-
 /* int gettime() */
 ENTRY(gettime)
 	pushl %ebp
@@ -143,7 +127,6 @@ ENTRY(read)
 	mov    8(%ebp), %edx		// 1) Pas de Parámetres
 	mov    12(%ebp), %ecx
 	mov    $11, %eax			// 2) Dir quin servei ès
-	//int    $0x80			// 3) INT
 	call syscall_sysenter
 	cmpl   $0, %eax
 	jge    rd_fin        
@@ -157,32 +140,141 @@ rd_fin:
 ENTRY (create_thread)
 	push   %ebp
 	mov    %esp, %ebp
-	push   %ebx
 	mov    8(%ebp), %edx		// 1) Pas de Parámetres
 	mov    12(%ebp), %ecx
 	mov    $12, %eax			// 2) Dir quin servei ès
 	call syscall_sysenter			// 3) INT
-	cmpl   $0, %eax
-	jge    ct_fin        
-	movl   %eax, errno		// 4) Tractament d'errors - Save errno to eax
-	mov    $-1, %eax
-ct_fin:
-	pop    %ebx
-	pop    %ebp
-	ret
-
-
+	test %eax, %eax
+	js nok
+	popl %ebp
+	add $4, %esp    // quitar wr_return	
+	ret	
 
 ENTRY (exit_thread)
     	pushl  %ebp
     	movl   %esp, %ebp
     	movl   $13, %eax 
-    	pushl  $ext_thr_return_user 
-    	pushl  %ebp              
-    	movl   %esp, %ebp
     	call syscall_sysenter               
-ext_thr_return_user:
     	popl   %ebp
-    	add $4,%esp // pop of return address.
-    	leave
-    	ret 
+	ret 
+
+ENTRY (mutex_init)
+    pushl %ebp
+    mov %esp, %ebp
+
+    pushl %ebx
+    pushl %ecx
+    pushl %edx
+
+    mov 8(%ebp), %ebx       // first argument to ebx
+
+    pushl $mt_return_user
+    pushl %ebp
+    mov %esp, %ebp
+
+    mov $0x05, %eax
+    sysenter
+    // after this the return value of the syscall will be in eax.
+mt_return_user:
+
+    // if eax<0 -> neg eax, save eax to errno and return -1
+    // else return eax
+    cmpl $0, %eax
+    jge mt_fin
+
+    // save -eax to errno here. 
+    neg %eax
+    movl %eax, errno
+    mov $-1, %eax
+
+mt_fin:
+    popl %ebp
+    add $4, %esp    // quitar wr_return
+
+    popl %edx
+    popl %ecx
+    popl %ebx
+
+    leave
+    ret
+
+ENTRY (mutex_lock)
+    pushl %ebp
+    mov %esp, %ebp
+
+    pushl %ebx
+    pushl %ecx
+    pushl %edx
+
+    mov 8(%ebp), %ebx       // first argument to ebx
+
+    pushl $mt_lock_return_user
+    pushl %ebp
+    mov %esp, %ebp
+
+    mov $0x06, %eax
+    sysenter
+    // after this the return value of the syscall will be in eax.
+mt_lock_return_user:
+
+    // if eax<0 -> neg eax, save eax to errno and return -1
+    // else return eax
+    cmpl $0, %eax
+    jge mt_lock_fin
+
+    // save -eax to errno here. 
+    neg %eax
+    movl %eax, errno
+    mov $-1, %eax
+
+mt_lock_fin:
+    popl %ebp
+    add $4, %esp    // quitar wr_return
+
+    popl %edx
+    popl %ecx
+    popl %ebx
+
+    leave
+    ret
+
+ENTRY (mutex_unlock)
+    pushl %ebp
+    mov %esp, %ebp
+
+    pushl %ebx
+    pushl %ecx
+    pushl %edx
+
+    mov 8(%ebp), %ebx       // first argument to ebx
+
+    pushl $mt_unlock_return_user
+    pushl %ebp
+    mov %esp, %ebp
+
+    mov $0x07, %eax
+    sysenter
+    // after this the return value of the syscall will be in eax.
+mt_unlock_return_user:
+
+    // if eax<0 -> neg eax, save eax to errno and return -1
+    // else return eax
+    cmpl $0, %eax
+    jge mt_unlock_fin
+
+    // save -eax to errno here. 
+    neg %eax
+    movl %eax, errno
+    mov $-1, %eax
+
+mt_unlock_fin:
+    popl %ebp
+    add $4, %esp    // quitar wr_return
+
+    popl %edx
+    popl %ecx
+    popl %ebx
+
+    leave
+    ret
+
