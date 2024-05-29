@@ -144,9 +144,10 @@ void keyboardService ()
 
     // mirar si buffer lleno
     if (t->circ_buff_chars_to_read == 0) 
-    {
+    /*{
       return 0;
-    }
+    }*/
+
     //list_add(t, &readyqueue); //FALTA POSAR AL PRNCIPI
       //sched_next_rr();
 	task_switch((union task_union *)t);
