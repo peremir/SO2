@@ -9,12 +9,10 @@
 struct list_head  freequeue;
 struct list_head readyqueue;
 extern struct list_head blocked;
+extern struct list_head readblocked;
 
 struct task_struct * idle_task;
 extern int quantum_left;
-
-
-int pids;
 
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
@@ -103,7 +101,6 @@ void init_task1(void) // task1 = INIT
   writeMSR(0x175, tss.esp0);
 
   set_cr3(get_DIR(&(pcb->task)));
-
 }
 
 void inner_task_switch(union task_union *new)
@@ -127,8 +124,10 @@ void init_sched()
   INIT_LIST_HEAD(&freequeue);
   INIT_LIST_HEAD(&readyqueue);
   INIT_LIST_HEAD(&blocked);
+  INIT_LIST_HEAD(&readblocked);
 
-  for (int i = 0; i < NR_TASKS; i++) {
+  for (int i = 0; i < NR_TASKS; i++) 
+  {
     list_add_tail(&(task[i].task.list),&freequeue);
   }
 }
@@ -146,25 +145,26 @@ struct task_struct* current()
 
 int get_quantum(struct task_struct *t) 
 {
-    return t->quantum;
+  return t->quantum;
 }
 
 void set_quantum(struct task_struct *t, int new_quantum) 
 {
-    t->quantum = new_quantum;
+  t->quantum = new_quantum;
 }
 
 void update_sched_data_rr (void)
 {
- --quantum_left;
+  --quantum_left;
 }
 
 
 int needs_sched_rr(void)
 {
-  if ((quantum_left == 0) && (!list_empty(&readyqueue))) 
+  if ((quantum_left <= 0) && (!list_empty(&readyqueue))) 
    return 1;
-  if (quantum_left == 0) quantum_left = get_quantum(current());
+  
+  if (quantum_left <= 0) quantum_left = get_quantum(current());
    return 0;
 }
 
@@ -174,7 +174,7 @@ void update_process_state_rr(struct task_struct *t, struct list_head *dst_queue)
   if (t != current() && t != idle_task) 
     list_del(&t->list);
   
-  if (dst_queue != NULL) 
+  if (dst_queue != NULL && t != idle_task) 
     list_add_tail(&t->list, dst_queue);
 }
 
@@ -186,7 +186,8 @@ void sched_next_rr (void)
 
   if (list_empty(&readyqueue)) 
     next_task = idle_task;
-  else {
+  else 
+  {
     ready = list_first(&readyqueue);
     //list_del(ready);
     

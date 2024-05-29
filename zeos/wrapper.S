@@ -35,7 +35,7 @@ ENTRY(SYSENTER_RETURN)
 	pop %ecx
 	ret
 
-/* System write interrupt wrapper */ 
+/* System write sysenter wrapper */ 
 ENTRY(write)
 	push   %ebp
 	mov    %esp, %ebp
@@ -44,7 +44,7 @@ ENTRY(write)
 	mov    12(%ebp), %ecx
 	mov    16(%ebp), %ebx
 	mov    $4, %eax			// 2) Dir quin servei ès
-	int    $0x80			// 3) INT
+	call syscall_sysenter			// 3) INT
 	cmpl   $0, %eax
 	jge    write_fin        
 	//neg    %eax
@@ -125,7 +125,7 @@ ENTRY(unblock)
 	push   %ebx
 	mov    8(%ebp), %edx		// 1) Pas de Parámetres
 	mov    $26, %eax			// 2) Dir quin servei ès
-	int    $0x80			// 3) INT
+	call syscall_sysenter			// 3) INT
 	cmpl   $0, %eax
 	jge    unblock_fin        
 	movl   %eax, errno		// 4) Tractament d'errors - Save errno to eax
@@ -143,7 +143,8 @@ ENTRY(read)
 	mov    8(%ebp), %edx		// 1) Pas de Parámetres
 	mov    12(%ebp), %ecx
 	mov    $11, %eax			// 2) Dir quin servei ès
-	int    $0x80			// 3) INT
+	//int    $0x80			// 3) INT
+	call syscall_sysenter
 	cmpl   $0, %eax
 	jge    rd_fin        
 	movl   %eax, errno		// 4) Tractament d'errors - Save errno to eax
@@ -151,4 +152,37 @@ ENTRY(read)
 rd_fin:
 	pop    %ebx
 	pop    %ebp
-	ret 
+	ret
+
+ENTRY (create_thread)
+	push   %ebp
+	mov    %esp, %ebp
+	push   %ebx
+	mov    8(%ebp), %edx		// 1) Pas de Parámetres
+	mov    12(%ebp), %ecx
+	mov    $12, %eax			// 2) Dir quin servei ès
+	call syscall_sysenter			// 3) INT
+	cmpl   $0, %eax
+	jge    ct_fin        
+	movl   %eax, errno		// 4) Tractament d'errors - Save errno to eax
+	mov    $-1, %eax
+ct_fin:
+	pop    %ebx
+	pop    %ebp
+	ret
+
+
+
+ENTRY (exit_thread)
+    	pushl  %ebp
+    	movl   %esp, %ebp
+    	movl   $13, %eax 
+    	pushl  $ext_thr_return_user 
+    	pushl  %ebp              
+    	movl   %esp, %ebp
+    	call syscall_sysenter               
+ext_thr_return_user:
+    	popl   %ebp
+    	add $4,%esp // pop of return address.
+    	leave
+    	ret 

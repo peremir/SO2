@@ -219,67 +219,130 @@ void sys_block()
 
 int sys_unblock(int pid)
 {
-    struct list_head* it;
-    list_for_each(it, &(current()->child_list))
-	{
-        struct task_struct *pcb_child = list_head_to_task_struct(it);	
-	    if (pcb_child->PID == pid) 
-	{
-            if (list_first(&(pcb_child->list)) == list_first(&blocked)) {
-                //desbloquearlo
-                struct list_head * l = &(pcb_child->list);
-                list_del(l);
-                list_add_tail(l, &readyqueue);
-                return 0;
-            }
-            else {
-		        pending_unblocks++;
-                return 0;
-            }
-        }
+  struct list_head* it;
+  list_for_each(it, &(current()->child_list))
+  {
+    struct task_struct *pcb_child = list_head_to_task_struct(it);	
+    if (pcb_child->PID == pid) 
+    {
+      if (list_first(&(pcb_child->list)) == list_first(&blocked)) 
+      {
+        //desbloquearlo
+        struct list_head * l = &(pcb_child->list);
+        list_del(l);
+        list_add_tail(l, &readyqueue);
+        return 0;
+      }
+      else 
+      {
+        pending_unblocks++;
+        return 0;
+      }
     }
+  }
     //ESTO TIENE QUE SER -1 !!!!
-    return -1;
+   return -1;
 }
 
 
-int sys_read(char *b, int maxchars) {
-    if (maxchars <= 0) return EINVAL;
-    if (!access_ok(VERIFY_WRITE, b, maxchars)) return EFAULT;
+int sys_read(char *b, int maxchars) 
+{
+  if (maxchars <= 0) 
+    return -EINVAL;
+  
+  if (!access_ok(VERIFY_WRITE, b, maxchars)) 
+    return -EFAULT;
     
-    struct task_struct *t = current();
+  struct task_struct *t = current();
 
-    t->circ_buff_chars_to_read = maxchars;
-    t->circ_buff_maxchars = maxchars;
+  t->circ_buff_chars_to_read = maxchars;
+  t->circ_buff_maxchars = maxchars;
 
-    // poner proceso en blocked para que el scheduler no le pille.
-    update_process_state_rr(t, &blocked);
+  // poner proceso en blocked prk scheduler no el psoi
+  update_process_state_rr(t, &readblocked);
     
-    //sys_block();
+  int diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
+  char buff[TAM_BUF];
+  while (t->circ_buff_chars_to_read > 0) 
+  {
+    sched_next_rr();
 
-    int diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
-    char buff[TAM_BUF];
-    while (t->circ_buff_chars_to_read > 0) {
-        sched_next_rr();
-
-        int i = 0;
-        char c = circ_buff_read();
-        while (c != '\0') {
-            buff[i] = c;
-            ++i;
-            c = circ_buff_read();
-        }
-
-        copy_to_user(buff, b + diff, i);
-
-        diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
+    int i = 0;
+    char c = circ_buff_read();
+    while (c != '\0') 
+    {
+      buff[i] = c;
+      ++i;
+      c = circ_buff_read();
     }
 
-    copy_to_user((void*)"\0", b+diff, 1);
+    copy_to_user(buff, b + diff, i);
 
-    //list_del(ready);
-    //update_process_state_rr(current(), &readyqueue);
-    //sched_next_rr();
-    //list_del(&current()->list);
-    return maxchars;
+    diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
+  }
+
+  copy_to_user((void*)"\0", b+diff, 1);
+  
+  update_process_state_rr(t,NULL);  
+  //sched_next_rr();
+  
+  return maxchars;
+
 }
+
+
+int sys_create_thread(void (*start_routine)(void* arg), void *parameter) 
+{
+  if (list_empty(&freequeue)) 
+    return -ENOMEM;
+
+  if (!access_ok(VERIFY_READ, start_routine, sizeof(void*))) 
+    return -EFAULT;
+
+  struct list_head *free_list_pos = list_first(&freequeue);
+  list_del(free_list_pos);
+
+  struct task_struct* pcb = list_head_to_task_struct(free_list_pos);
+  union task_union* pcb_union = (union task_union*)pcb;
+
+  copy_data(current(), pcb_union, sizeof(union task_union));
+
+  int dir_pos = ((int)get_DIR(pcb)-(int)dir_pages)/(sizeof(page_table_entry)*TOTAL_PAGES);
+  pcbs_in_dir[dir_pos]++;
+
+  DWord *new_stack = get_new_stack(get_PT(pcb));
+  if (new_stack == NULL) 
+    return -ENOMEM;
+
+  DWord *base_stack = &(pcb_union->stack[KERNEL_STACK_SIZE]);
+
+  new_stack[(PAGE_SIZE/4)-1] = (DWord)parameter;
+  new_stack[(PAGE_SIZE/4)-2] = (DWord)0; 
+  
+  pcb->kernel_esp = &(pcb_union->stack[KERNEL_STACK_SIZE-19]); // 17-2 por el @ret_from_fork y el ebp.
+  
+  pcb_union->stack[KERNEL_STACK_SIZE-19] = 0;
+  pcb_union->stack[KERNEL_STACK_SIZE-18] = (DWord)ret_from_fork;   
+  
+  base_stack[-5] = (DWord)start_routine;
+  base_stack[-2] = (DWord)&new_stack[(PAGE_SIZE/4)-2];
+  
+  list_add_tail(free_list_pos, &readyqueue);
+
+  return 0;
+}
+
+void sys_exit_thread(void) 
+{
+  struct task_struct* t = current();
+    
+  union task_union* t_union = (union task_union*)t;
+  DWord *base_stack = &(t_union->stack[KERNEL_STACK_SIZE]);
+
+  DWord page = base_stack[-2] >> 12;
+
+  del_ss_pag(get_PT(t), page);
+
+  sys_exit();
+}
+
