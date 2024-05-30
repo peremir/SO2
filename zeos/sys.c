@@ -81,7 +81,7 @@ int ret_from_fork()
 
 int sys_fork()
 {
-  struct list_head *lhcurrent = NULL;
+  struct list_head *lhcurrent = NULL; 
   union task_union *uchild;
   
   /* Any free task_struct? */
@@ -141,9 +141,9 @@ int sys_fork()
   for (pag=NUM_PAG_KERNEL; pag<NUM_PAG_KERNEL+NUM_PAG_DATA; pag++)
   {
     /* Map one child page to parent's address space. */
-    set_ss_pag(parent_PT, pag+NUM_PAG_DATA+NUM_PAG_CODE, get_frame(process_PT, pag));
-    copy_data((void*)(pag<<12), (void*)((pag+NUM_PAG_DATA+NUM_PAG_CODE)<<12), PAGE_SIZE);
-    del_ss_pag(parent_PT, pag+NUM_PAG_DATA+NUM_PAG_CODE);
+    set_ss_pag(parent_PT, pag+NUM_PAG_DATA+NUM_PAG_CODE+5, get_frame(process_PT, pag));
+    copy_data((void*)(pag<<12), (void*)((pag+NUM_PAG_DATA+NUM_PAG_CODE+5)<<12), PAGE_SIZE);
+    del_ss_pag(parent_PT, pag+NUM_PAG_DATA+NUM_PAG_CODE+5);
   }
   /* Deny access to the child's memory space */
   set_cr3(get_DIR(current()));
@@ -184,7 +184,20 @@ int sys_fork()
 }
 
 void sys_exit()
-{
+{ /*
+  struct task_struct* current_proc = current();
+
+  pcbs_in_dir[get_DIR_pos(current_proc)]--;
+
+  if (pcbs_in_dir[get_DIR_pos(current_proc)] == 0) 
+  {
+    // Free user pages
+    free_user_pages(current_proc);
+  }
+  list_add_tail(&current_proc->list, &freequeue);
+
+  sched_next_rr();
+	*/	
   struct task_struct *pcb = current();
   struct task_struct *pcb_parent = pcb->parent;	
 
@@ -199,6 +212,7 @@ void sys_exit()
   free_user_pages(current());
   update_process_state_rr(current(), &freequeue);
   sched_next_rr();
+ 
 }
 
 void sys_block()
@@ -304,9 +318,7 @@ int sys_read(char *b, int maxchars)
       c = circ_buff_read();
       t->circ_buff_chars_to_read--;
     }
-
     copy_to_user(buff, b + diff, i);
-
     diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
     if (t->circ_buff_chars_to_read > 0)  {
     //comprovar que esta a la llista de blokcedrd
@@ -326,7 +338,6 @@ int sys_read(char *b, int maxchars)
     update_process_state_rr(list_first(&readblocked),&readyqueue);
   }*/
   return maxchars;
-
 }
 
 
@@ -337,38 +348,53 @@ int sys_create_thread(void (*start_routine)(void* arg), void *parameter)
 
   if (!access_ok(VERIFY_READ, start_routine, sizeof(void*))) 
     return -EFAULT;
+  //pillar pcb, delete, taskstruct-union etc.. la vaina
+  struct list_head *free = list_first(&freequeue);
+  list_del(free);
 
-  struct list_head *free_list_pos = list_first(&freequeue);
-  list_del(free_list_pos);
-
-  struct task_struct* pcb = list_head_to_task_struct(free_list_pos);
+  struct task_struct* pcb = list_head_to_task_struct(free);
   union task_union* pcb_union = (union task_union*)pcb;
-
+  
+  //copiem data de current a pcb pilla  
   copy_data(current(), pcb_union, sizeof(union task_union));
-
+  
+  //posicio dir de pagines del thread i sumar contador
   int dir_pos = ((int)get_DIR(pcb)-(int)dir_pages)/(sizeof(page_table_entry)*TOTAL_PAGES);
   pcbs_in_dir[dir_pos]++;
-
+  
+  //stack fill
   DWord *new_stack = get_new_stack(get_PT(pcb));
   if (new_stack == NULL) 
-    return -ENOMEM;
-
+    return -ENOMEM;   //ENOMEM sirve
+  
+  //BASE KERNEL STACK ADDRESS
   DWord *base_stack = &(pcb_union->stack[KERNEL_STACK_SIZE]);
+ 
+  //Primer i segon DWord size param 
+  base_stack[-1] = (DWord)parameter;
+  base_stack[-2] = (DWord)0; 
 
-  new_stack[(PAGE_SIZE/4)-1] = (DWord)parameter;
-  new_stack[(PAGE_SIZE/4)-2] = (DWord)0; 
-  
-  pcb->kernel_esp = &(pcb_union->stack[KERNEL_STACK_SIZE-19]); // 17-2 por el @ret_from_fork y el ebp.
-  
-  pcb_union->stack[KERNEL_STACK_SIZE-19] = 0;
-  pcb_union->stack[KERNEL_STACK_SIZE-18] = (DWord)ret_from_fork;   
-  
+  int register_ebp;             /* frame pointer */
+  /* Map Parent's ebp to child's stack */
+  register_ebp = (int) get_ebp();
+  register_ebp=(register_ebp - (int)current()) + (int)(pcb_union);
+
+  pcb_union->task.kernel_esp=register_ebp + sizeof(DWord);
+
+  DWord temp_ebp = *(DWord*)register_ebp;
+  /* Prepare child stack for context switch */
+  pcb_union->task.kernel_esp-=sizeof(DWord);
+  *(DWord*)(pcb_union->task.kernel_esp)=(DWord)&ret_from_fork;
+  pcb_union->task.kernel_esp-=sizeof(DWord);
+  *(DWord*)(pcb_union->task.kernel_esp)=temp_ebp;
+
+  /* Adress where el thread ha de comen+ar */ 
   base_stack[-5] = (DWord)start_routine;
   base_stack[-2] = (DWord)&new_stack[(PAGE_SIZE/4)-2];
-  
-  list_add_tail(free_list_pos, &readyqueue);
 
-  return 0;
+  list_add_tail(free, &readyqueue);
+
+  return 0; 
 }
 
 void sys_exit_thread(void) 
@@ -376,12 +402,90 @@ void sys_exit_thread(void)
   struct task_struct* t = current();
     
   union task_union* t_union = (union task_union*)t;
+  
+  //BOrrar paginess
   DWord *base_stack = &(t_union->stack[KERNEL_STACK_SIZE]);
-
-  DWord page = base_stack[-2] >> 12;
-
+  DWord page = base_stack[-2] >> 12;  //mem pag de la stack
   del_ss_pag(get_PT(t), page);
 
-  sys_exit();
+  struct task_struct* current_proc = current();
+
+  pcbs_in_dir[get_DIR_pos(current_proc)]--;
+ 
+  if (pcbs_in_dir[get_DIR_pos(current_proc)] == 0) 
+   {
+     // Free user pages
+     free_user_pages(current_proc);
+}  
+
+  list_add_tail(&current_proc->list, &freequeue);
+
+  sched_next_rr();
+}
+
+
+int sys_mutex_init(int *m) 
+{
+  if (!access_ok(VERIFY_READ, m, sizeof(int)))
+    return -EFAULT;
+
+  int m_sys = 0;
+  copy_from_user(m, &m_sys, sizeof(int));
+
+  struct mutex_t *mutex = mutex_get(m_sys);
+  if (mutex == NULL) 
+    return -1;
+
+  mutex->count = 0;
+
+  return 0;
+}
+
+int sys_mutex_lock(int *m) 
+{
+  if (!access_ok(VERIFY_WRITE, m, sizeof(int)) || !access_ok(VERIFY_READ, m, sizeof(int))) 
+    return -EFAULT;
+
+  int m_sys;
+  copy_from_user(m, &m_sys, sizeof(int));
+
+  struct mutex_t *mutex = mutex_get(m_sys);
+  if (mutex == NULL || mutex->count == -1) 
+    return -1;
+
+  if (mutex->count >= 1) 
+  {     
+    update_process_state_rr(current(), &mutex->blocked_queue);
+    sched_next_rr();
+  }
+  mutex->count++;
+
+  return 0;
+}
+
+int sys_mutex_unlock(int *m) 
+{
+  if (!access_ok(VERIFY_WRITE, m, sizeof(int)) || !access_ok(VERIFY_READ, m, sizeof(int)))
+    return -EFAULT;
+
+  int m_sys;
+  copy_from_user(m, &m_sys, sizeof(int));
+
+  struct mutex_t *mutex = mutex_get(m_sys);
+  if (mutex == NULL || mutex->count == -1) 
+    return -1;
+
+  if (mutex->count == 0) 
+    return 0;
+
+  if (!list_empty(&mutex->blocked_queue)) 
+  {
+    struct task_struct *t = list_head_to_task_struct(list_first(&mutex->blocked_queue));
+    list_del(&t->list);
+    list_add(&t->list, &readyqueue);
+  }
+  mutex->count--;
+
+  return 0;
 }
 

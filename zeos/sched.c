@@ -49,6 +49,8 @@ int allocate_DIR(struct task_struct *t)
   pos = ((int)t-(int)task)/sizeof(union task_union);
 
   t->dir_pages_baseAddr = (page_table_entry*) &dir_pages[pos]; 
+  
+  pcbs_in_dir[get_DIR_pos(t)]++;
 
   return 1;
 }
@@ -105,6 +107,7 @@ void init_task1(void) // task1 = INIT
 
 void inner_task_switch(union task_union *new)
 {
+  
   /* Update TSS and MSR to make it point to the new stack */
   tss.esp0 = KERNEL_ESP(new);
   writeMSR(0x175, tss.esp0);
@@ -209,5 +212,14 @@ void schedule()
     update_process_state_rr(current(), &readyqueue);
     sched_next_rr();
   }
+}
+
+struct mutex_t mutexes[MAX_MUTEXES];
+
+struct mutex_t* mutex_get(int id) {
+    if (id < 0) return NULL;
+    if (id >= MAX_MUTEXES) return NULL;
+
+    return &mutexes[id];
 }
 

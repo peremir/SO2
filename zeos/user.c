@@ -3,15 +3,31 @@
 char buff[24];
 
 int pid;
+int mutex = 0;
 
 int addAsm(int par1, int par2);
 int write(int fd, char * buffer, int size);
 unsigned int gettime();
 int getpid();
 
+
 void print(char *buffer)
 {
   write(1, buffer, strlen(buffer));
+}
+
+void printNum(int num)
+{
+  char *numBuff = "\0\0\0\0\0\0";
+  itoa(num, numBuff);
+  print(numBuff);
+}
+
+void func(int i)
+{
+  print("\nHOLA SOY UN THREAD");
+  
+  exit_thread();
 }
 
 void pf()
@@ -40,88 +56,35 @@ int __attribute__ ((__section__(".text.main")))
 
   /* Funcio addAsm suma en assembly */
   //int x = addAsm(0x42, 0x666);  
+  create_thread((void*)func, 0);
+ 
+  //Test de la syscall fork feta amb sysenter 
   
-  /* Crida syscall write per escriure per pantalla com a usuari 
-  if(write(1,"\nsyscall write funcionant :)",strlen("\nsyscall write funcionant :)")) < 0) perror();
-  print(" TEST PRINT");
-  //Test de la syscall gettime feta amb sysenter
-  char *buffer = "\0\0\0\0\0";
-  write(1, "\nGettime: ", 10);
-  itoa(gettime(), buffer);
-  write(1, buffer, 6);     */
-  
-  /*
-  //Test de la syscall getpid feta amb sysenter 
-  char *buffer2 = "\0\0\0\0\0";
-  write(1, "\nGetpid: ", 9); 
-  itoa(getpid(), buffer2);
-  write(1, buffer2, 6);    */ 
-  
-  //Test de la syscall fork feta amb sysenter
   
   int pid = fork();
   if (pid == 0)
   { 
     block();
+    
     char *bufferC = "\0\0\0\0\0";
-    write(1, "\nCHILD Getpid: ", 15);
+    print("\nCHILD Getpid: ");
     itoa(getpid(), bufferC);
-    write(1, bufferC, strlen(bufferC)); 
-    
-    char b[5];
-    int err = read(b, 4);
-    
-    char *buff = "\0\0\0\0\0\0";
-    itoa(err, buff);
-    print(buff);
-    
-    print(b);
-    print("\n");
-
+    print(bufferC);
   }
   else if(pid > 0)
   {  
     char *bufferP = "\0\0\0\0\0";
-    write(1, "\nPARENT Getpid: ", 16);
+    print("\nPARENT Getpid: ");
     itoa(getpid(), bufferP);
-    write(1, bufferP, strlen(bufferP));
-    
-    char b[5];
-    int err = read(b, 4);
-    
-    char *buff = "\0\0\0\0\0\0";
-    itoa(err, buff);
-    print(buff);
-    
-    print(b);
-    print("\n");
-    unblock(pid);
-    
-  }
+    print(bufferP);
 
-/*  int ret = unblock(2);
-    char *fubber = "\0\0\0\0\0";
-    itoa(ret, fubber);
-    print(fubber); */
-/*
- int pid2 = fork();
-       if (pid2 == 0)
-       {
-        //block();
-	char *bufferCD = "\0\0\0\0\0\0";
-        write(1, "\n   CHILD2 Getpid: ", 19);
-        itoa(getpid(), bufferCD);
-        write(1, bufferCD, 6);
-        }
-        else if(pid2 > 0)
-        {
-        //unblock(2);
-	char *bufferPD = "\0\0\0\0\0\0";
-        write(1, "\n   PARENT2 Getpid: ", 19);
-        itoa(getpid(), bufferPD);
-        write(1, bufferPD, 6);
-       }
- */
+    char *buff = "\0\0\0\0\0\0";
+    read(buff, 4);
+    print("\n"); print(buff);
+
+    unblock(pid);  
+  }
+  
   /* Funcio que provoca un page fault exception */
   //pf(); 
 
