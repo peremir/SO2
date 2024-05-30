@@ -31,6 +31,8 @@ TSS         tss;
 
 unsigned int pcbs_in_dir[NR_TASKS];
 
+char* sbrk;
+
 /***********************************************/
 /************** PAGING MANAGEMENT **************/
 /***********************************************/
@@ -138,6 +140,8 @@ void init_mm()
   allocate_DIR(&task[0].task);
   set_cr3(get_DIR(&task[0].task));
   set_pe_flag();
+
+  sbrk = (void*)(TOTAL_PAGES<<12);
 }
 /***********************************************/
 /************** SEGMENTATION MANAGEMENT ********/

@@ -158,120 +158,35 @@ ENTRY (exit_thread)
 ENTRY (mutex_init)
     pushl %ebp
     mov %esp, %ebp
-
-    pushl %ebx
-    pushl %ecx
-    pushl %edx
-
-    mov 8(%ebp), %ebx       // first argument to ebx
-
-    pushl $mt_return_user
-    pushl %ebp
-    mov %esp, %ebp
-
-    mov $0x05, %eax
-    sysenter
-    // after this the return value of the syscall will be in eax.
-mt_return_user:
-
-    // if eax<0 -> neg eax, save eax to errno and return -1
-    // else return eax
-    cmpl $0, %eax
-    jge mt_fin
-
-    // save -eax to errno here. 
-    neg %eax
-    movl %eax, errno
-    mov $-1, %eax
-
-mt_fin:
+    mov 8(%ebp), %edx       // first argument to ebx
+    mov $5, %eax
+    call syscall_sysenter
     popl %ebp
-    add $4, %esp    // quitar wr_return
-
-    popl %edx
-    popl %ecx
-    popl %ebx
-
-    leave
     ret
 
 ENTRY (mutex_lock)
     pushl %ebp
     mov %esp, %ebp
-
-    pushl %ebx
-    pushl %ecx
-    pushl %edx
-
-    mov 8(%ebp), %ebx       // first argument to ebx
-
-    pushl $mt_lock_return_user
-    pushl %ebp
-    mov %esp, %ebp
-
-    mov $0x06, %eax
-    sysenter
-    // after this the return value of the syscall will be in eax.
-mt_lock_return_user:
-
-    // if eax<0 -> neg eax, save eax to errno and return -1
-    // else return eax
-    cmpl $0, %eax
-    jge mt_lock_fin
-
-    // save -eax to errno here. 
-    neg %eax
-    movl %eax, errno
-    mov $-1, %eax
-
-mt_lock_fin:
+    mov 8(%ebp), %edx       // first argument to ebx
+    mov $6, %eax
+    call syscall_sysenter
     popl %ebp
-    add $4, %esp    // quitar wr_return
-
-    popl %edx
-    popl %ecx
-    popl %ebx
-
-    leave
     ret
 
 ENTRY (mutex_unlock)
     pushl %ebp
     mov %esp, %ebp
-
-    pushl %ebx
-    pushl %ecx
-    pushl %edx
-
-    mov 8(%ebp), %ebx       // first argument to ebx
-
-    pushl $mt_unlock_return_user
-    pushl %ebp
-    mov %esp, %ebp
-
-    mov $0x07, %eax
-    sysenter
-    // after this the return value of the syscall will be in eax.
-mt_unlock_return_user:
-
-    // if eax<0 -> neg eax, save eax to errno and return -1
-    // else return eax
-    cmpl $0, %eax
-    jge mt_unlock_fin
-
-    // save -eax to errno here. 
-    neg %eax
-    movl %eax, errno
-    mov $-1, %eax
-
-mt_unlock_fin:
+    mov 8(%ebp), %edx       // first argument to ebx
+    mov $7, %eax
+    call syscall_sysenter
     popl %ebp
-    add $4, %esp    // quitar wr_return
-
-    popl %edx
-    popl %ecx
-    popl %ebx
-
-    leave
     ret
 
+ENTRY (dyn_mem)
+    pushl %ebp
+    mov %esp, %ebp
+    mov 8(%ebp), %edx       // first argument to ebx
+    mov $14, %eax
+    call syscall_sysenter
+    popl %ebp
+    ret

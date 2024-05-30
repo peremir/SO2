@@ -1,4 +1,3 @@
-#include <libc.h>
 
 char buff[24];
 
@@ -9,7 +8,6 @@ int addAsm(int par1, int par2);
 int write(int fd, char * buffer, int size);
 unsigned int gettime();
 int getpid();
-
 
 void print(char *buffer)
 {
@@ -23,17 +21,16 @@ void printNum(int num)
   print(numBuff);
 }
 
+void printl()
+{
+ print("\n");
+}
+
 void func(int i)
 {
   print("\nHOLA SOY UN THREAD");
   
   exit_thread();
-}
-
-void pf()
-{
-  char *p = 0;
-  *p = 'x';
 }
 
 int __attribute__ ((__section__(".text.main")))
@@ -43,12 +40,32 @@ int __attribute__ ((__section__(".text.main")))
   /* This register is a privileged one, and so it will raise an exception */
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
+  
+     // Alocatamos memoria
+     char *buffer = dyn_mem(4096*2);
+    
+     // Escribimos en memoria
+     for (int i = 0; i < 4096*2; ++i) 
+     {
+         buffer[i] = "a";
+     }
+     print("\nRecorremos la memoria por primera vez sin ningun problema");
+    
+     buffer[4096] = "a"; // No deberia dar page_fault
+     print("\nA mi SI me deberias ver");
 
+     ////printl(); print(buffer[4096]);
+     
+     // Hacemos free de parte de la memoria
+     dyn_mem(-4096*2);
+     
+     //buffer[4096] = "a"; // Deberia dar page_fault
+     //print("A mi no me deberias ver el pelo\n");
+     
+  /*
   create_thread((void*)func, 0);
- 
-  //Test de la syscall fork feta amb sysenter 
-  
-  
+
+   
   int pid = fork();
   if (pid == 0)
   { 
@@ -65,16 +82,14 @@ int __attribute__ ((__section__(".text.main")))
     print("\nPARENT Getpid: ");
     itoa(getpid(), bufferP);
     print(bufferP);
+    
+    char b[5];
+    read(b, 4);
+    print("\n"); print(b);
 
-    char *buff = "\0\0\0\0\0\0";
-    read(buff, 4);
-    print("\n"); print(buff);
-
-    unblock(pid);  
+    unblock(pid);
   }
+  */
   
-  /* Funcio que provoca un page fault exception */
-  //pf(); 
-
-  while(1) { }
+   while(1) { }
 }

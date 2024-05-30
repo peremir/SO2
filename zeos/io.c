@@ -15,6 +15,7 @@
 
 Byte x, y;
 
+Word *screen = (Word *)0xb8000;
 
 /* Read a byte from 'port' */
 Byte inb (unsigned short port)
@@ -30,7 +31,6 @@ Byte inb (unsigned short port)
 //NEW Scroll up the screen by one row
 void scroll()
 {
-  Word *screen = (Word *)0xb8000;
   // loop through the screen content except the last row
   for (int i = 0; i < (NUM_ROWS - 1) * NUM_COLUMNS; i++) 
   {
@@ -179,3 +179,20 @@ void printk_color(char *string, int mask)
     printc_color(string[i], mask);
 }
 
+void erase_current_char() {
+    Word ch = (Word) ('\0' & 0x00FF) | 0x0200;
+    if (--x < 0) {
+        x = NUM_COLUMNS - 1;
+        y = (y - 1) % NUM_ROWS;
+    }
+    screen[(y * NUM_COLUMNS + x)] = ch;
+
+}
+
+void set_cursor(Byte new_x, Byte new_y) {
+    if (x >= NUM_COLUMNS || y >= NUM_ROWS) {
+        return;
+    }
+    x = new_x;
+    y = new_y;
+}
