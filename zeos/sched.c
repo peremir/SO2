@@ -49,6 +49,8 @@ int allocate_DIR(struct task_struct *t)
   pos = ((int)t-(int)task)/sizeof(union task_union);
 
   t->dir_pages_baseAddr = (page_table_entry*) &dir_pages[pos]; 
+  
+  pcbs_in_dir[get_DIR_pos(t)]++;
 
   return 1;
 }

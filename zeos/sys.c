@@ -81,7 +81,7 @@ int ret_from_fork()
 
 int sys_fork()
 {
-  struct list_head *lhcurrent = NULL;
+  struct list_head *lhcurrent = NULL; 
   union task_union *uchild;
   
   /* Any free task_struct? */
@@ -141,9 +141,9 @@ int sys_fork()
   for (pag=NUM_PAG_KERNEL; pag<NUM_PAG_KERNEL+NUM_PAG_DATA; pag++)
   {
     /* Map one child page to parent's address space. */
-    set_ss_pag(parent_PT, pag+NUM_PAG_DATA+NUM_PAG_CODE, get_frame(process_PT, pag));
-    copy_data((void*)(pag<<12), (void*)((pag+NUM_PAG_DATA+NUM_PAG_CODE)<<12), PAGE_SIZE);
-    del_ss_pag(parent_PT, pag+NUM_PAG_DATA+NUM_PAG_CODE);
+    set_ss_pag(parent_PT, pag+NUM_PAG_DATA+NUM_PAG_CODE+5, get_frame(process_PT, pag));
+    copy_data((void*)(pag<<12), (void*)((pag+NUM_PAG_DATA+NUM_PAG_CODE+5)<<12), PAGE_SIZE);
+    del_ss_pag(parent_PT, pag+NUM_PAG_DATA+NUM_PAG_CODE+5);
   }
   /* Deny access to the child's memory space */
   set_cr3(get_DIR(current()));
@@ -184,7 +184,7 @@ int sys_fork()
 }
 
 void sys_exit()
-{
+{ /*
   struct task_struct* current_proc = current();
 
   pcbs_in_dir[get_DIR_pos(current_proc)]--;
@@ -197,7 +197,7 @@ void sys_exit()
   list_add_tail(&current_proc->list, &freequeue);
 
   sched_next_rr();
-	/*	
+	*/	
   struct task_struct *pcb = current();
   struct task_struct *pcb_parent = pcb->parent;	
 
@@ -212,7 +212,7 @@ void sys_exit()
   free_user_pages(current());
   update_process_state_rr(current(), &freequeue);
   sched_next_rr();
- */
+ 
 }
 
 void sys_block()
@@ -309,7 +309,6 @@ int sys_read(char *b, int maxchars)
   update_process_state_rr(t,NULL);  
   
   return maxchars;
-
 }
 
 
@@ -343,11 +342,9 @@ int sys_create_thread(void (*start_routine)(void* arg), void *parameter)
   DWord *base_stack = &(pcb_union->stack[KERNEL_STACK_SIZE]);
  
   //Primer i segon DWord size param 
-  new_stack[(PAGE_SIZE/4)-1] = (DWord)parameter;
-  new_stack[(PAGE_SIZE/4)-2] = (DWord)0; 
+  base_stack[-1] = (DWord)parameter;
+  base_stack[-2] = (DWord)0; 
 
-  pcb->kernel_esp = &(pcb_union->stack[KERNEL_STACK_SIZE-19]);
- 
   int register_ebp;             /* frame pointer */
   /* Map Parent's ebp to child's stack */
   register_ebp = (int) get_ebp();
@@ -361,7 +358,7 @@ int sys_create_thread(void (*start_routine)(void* arg), void *parameter)
   *(DWord*)(pcb_union->task.kernel_esp)=(DWord)&ret_from_fork;
   pcb_union->task.kernel_esp-=sizeof(DWord);
   *(DWord*)(pcb_union->task.kernel_esp)=temp_ebp;
- 
+
   /* Adress where el thread ha de comen+ar */ 
   base_stack[-5] = (DWord)start_routine;
   base_stack[-2] = (DWord)&new_stack[(PAGE_SIZE/4)-2];
@@ -382,7 +379,19 @@ void sys_exit_thread(void)
   DWord page = base_stack[-2] >> 12;  //mem pag de la stack
   del_ss_pag(get_PT(t), page);
 
-  sys_exit();
+  struct task_struct* current_proc = current();
+
+  pcbs_in_dir[get_DIR_pos(current_proc)]--;
+ 
+  if (pcbs_in_dir[get_DIR_pos(current_proc)] == 0) 
+   {
+     // Free user pages
+     free_user_pages(current_proc);
+}  
+
+  list_add_tail(&current_proc->list, &freequeue);
+
+  sched_next_rr();
 }
 
 

@@ -31,7 +31,7 @@ ENTRY(syscall_sysenter)
 ENTRY(SYSENTER_RETURN)
 	pop %ebp
 	pop %edx
-	pop %edx
+	pop %ecx
 	pop %ecx
 	ret
 
@@ -144,10 +144,7 @@ ENTRY (create_thread)
 	mov    12(%ebp), %ecx
 	mov    $12, %eax			// 2) Dir quin servei ès
 	call syscall_sysenter			// 3) INT
-	test %eax, %eax
-	js nok
 	popl %ebp
-	add $4, %esp    // quitar wr_return	
 	ret	
 
 ENTRY (exit_thread)

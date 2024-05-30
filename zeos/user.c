@@ -26,7 +26,7 @@ void printNum(int num)
 void func(int i)
 {
   print("\nHOLA SOY UN THREAD");
-    
+  
   exit_thread();
 }
 
@@ -44,10 +44,11 @@ int __attribute__ ((__section__(".text.main")))
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
+  create_thread((void*)func, 0);
  
-  //create_thread((void*)func, 0);
- 
-  //Test de la syscall fork feta amb sysenter
+  //Test de la syscall fork feta amb sysenter 
+  
+  
   int pid = fork();
   if (pid == 0)
   { 
@@ -71,7 +72,7 @@ int __attribute__ ((__section__(".text.main")))
 
     unblock(pid);  
   }
-
+  
   /* Funcio que provoca un page fault exception */
   //pf(); 
 
