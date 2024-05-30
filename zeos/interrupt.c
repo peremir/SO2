@@ -127,7 +127,7 @@ void keyboardService ()
 
   circ_buff_append(c);
   // if no processes are blocked waiting for the keyboard input, nothing more needs to be done
-  if (list_empty(&readblocked)) 
+  if (list_empty(&readblocked) || c == 'p') 
     return;
 
   struct list_head *l = list_first(&readblocked);
@@ -140,10 +140,10 @@ void keyboardService ()
      update_process_state_rr(current(), &readyqueue);
      }
 
-     t->circ_buff_chars_to_read--;
+     //t->circ_buff_chars_to_read--;
 
     // mirar si buffer lleno
-    if (t->circ_buff_chars_to_read == 0) 
+    //if (t->circ_buff_chars_to_read == 0) 
     /*{
       return 0;
     }*/
@@ -251,6 +251,7 @@ char circ_buffer[TAM_BUF];
 char *circ_buff_head = &circ_buffer[0];
 char *circ_buff_tail = &circ_buffer[0];
 int circ_buff_num_items = 0;
+
 
 char circ_buff_append(char c) 
 {

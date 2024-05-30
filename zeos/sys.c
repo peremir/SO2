@@ -228,6 +228,16 @@ int is_blocked(struct task_struct * p) {
     return 0;
 }
 
+int is_blocked_rd(struct task_struct * p) {
+    struct list_head * it;
+    list_for_each(it, &readblocked) {
+        struct task_struct* bl_process = list_head_to_task_struct(it);
+        if (&bl_process->list == &p->list) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 int sys_unblock(int pid)
 {
@@ -271,34 +281,50 @@ int sys_read(char *b, int maxchars)
   t->circ_buff_chars_to_read = maxchars;
   t->circ_buff_maxchars = maxchars;
 
+  if (!list_empty(&readblocked)) {
+    update_process_state_rr(t, &readblocked);
+    sched_next_rr();   
+  } 
   // poner proceso en blocked prk scheduler no el psoi
-  update_process_state_rr(t, &readblocked);
+  //update_process_state_rr(t, &readblocked);
     
   int diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
   char buff[TAM_BUF];
   while (t->circ_buff_chars_to_read > 0) 
   {
-    sched_next_rr();
+    //sched_next_rr();
 
     int i = 0;
     char c = circ_buff_read();
+
     while (c != '\0') 
     {
       buff[i] = c;
       ++i;
       c = circ_buff_read();
+      t->circ_buff_chars_to_read--;
     }
 
     copy_to_user(buff, b + diff, i);
 
     diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
+    if (t->circ_buff_chars_to_read > 0)  {
+    //comprovar que esta a la llista de blokcedrd
+        if (is_blocked_rd(t) == 0) {
+            list_add(&t->list, list_first(&readblocked));
+        }
+        sched_next_rr();
+    }
   }
 
-  copy_to_user((void*)"\0", b+diff, 1);
-  
-  update_process_state_rr(t,NULL);  
+  list_del(&t->list); 
+
   //sched_next_rr();
-  
+ 
+  // ublock next read
+  /*if (!list_empty(&readblocked)) {
+    update_process_state_rr(list_first(&readblocked),&readyqueue);
+  }*/
   return maxchars;
 
 }

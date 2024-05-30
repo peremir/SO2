@@ -28,14 +28,14 @@ int __attribute__ ((__section__(".text.main")))
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
-    char b[4];
-    int err = read(b, 2);
+    char c[4];
+    int err = read(c, 2);
     
     char *buff = "\0\0\0\0\0\0";
-    //itoa(err, buff);
-    //print(buff);
+    itoa(err, buff);
+    print(buff);
     
-    print(b);
+    print(c);
     print("\n");
 
   /* Funcio addAsm suma en assembly */
@@ -67,6 +67,16 @@ int __attribute__ ((__section__(".text.main")))
     write(1, "\nCHILD Getpid: ", 15);
     itoa(getpid(), bufferC);
     write(1, bufferC, strlen(bufferC)); 
+    
+    char b[5];
+    int err = read(b, 4);
+    
+    char *buff = "\0\0\0\0\0\0";
+    itoa(err, buff);
+    print(buff);
+    
+    print(b);
+    print("\n");
 
   }
   else if(pid > 0)
@@ -76,12 +86,12 @@ int __attribute__ ((__section__(".text.main")))
     itoa(getpid(), bufferP);
     write(1, bufferP, strlen(bufferP));
     
-    char b[4];
+    char b[5];
     int err = read(b, 4);
     
     char *buff = "\0\0\0\0\0\0";
-    //itoa(err, buff);
-    //print(buff);
+    itoa(err, buff);
+    print(buff);
     
     print(b);
     print("\n");
