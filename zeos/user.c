@@ -56,7 +56,8 @@ void keyboardRead(struct game *game)
 
 void gameStep(int id)
 {
-
+  print("\ngameStep");
+  //DIBUIXAR PLAYER AND ENEMIES
 
   exit_thread();
 }
@@ -84,13 +85,20 @@ void gameStart()
   game->mutex = 0;
   mutex_init(&game->mutex);
 
-  
-  
   //RUNNING GAME ALREADY
   create_thread((void*)keyboardRead, game);
   
-  while(!game->end_game) {
-    //print("\n game running");
+  while(!game->end_game) {   
+    
+    //CALCULATE AND EXECUTE A GAME STEP
+    if(gettime()%50 == 0) {
+      int time = gettime();
+      while(gettime() == time);
+
+      create_thread((void*)gameStep, game);
+    }
+  
+  //MORE GAME DATA
   }
 }
 
