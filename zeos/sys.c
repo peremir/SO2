@@ -43,23 +43,10 @@ int sys_write(int fd, char * buffer, int size)
 
   if (size <= 0) return -EINVAL; /* Invalid argument -22 */
   
-  // Print char by char so the stacj does not fill
-  /*for (int i = 0; i < size; ++i)
-  {
-    // Initialize the char that we are going to write
-    char buff;
-
-    // Copy from user one char from the buffer moved by i
-    error = copy_from_user(buffer + i, &buff, sizeof(buff));
-    if (error < 0) return error;
-
-    // Write the 1 char coppied
-    sys_write_console(&buff, sizeof(buff));
-  }*/
-    error = copy_from_user(buffer, &buff, size);
-    if (error < 0) return error;
+  error = copy_from_user(buffer, &buff, size);
+  if (error < 0) return error;
   
-    sys_write_console(&buff, size);
+  sys_write_console(&buff, size);
   return 0; /* No error */
 }
 
@@ -171,15 +158,6 @@ int sys_fork()
  
   schild->PID=pids++;
   schild->quantum=DEFAULT_QUANTUM;
-/*
-  struct list_head *it; 
-  list_for_each( it, &current()->child_list ) {
-    struct task_struct *child = list_head_to_task_struct(it);  
-    char *buffer = "\0\0\0\0\0";
-    itoa(child->PID, buffer);
-    printk("\n");  printk("child_list pid ");
-    printk(buffer);
- } */
  
   /* Queue child process into readyqueue */
   list_add_tail(&(schild->list), &readyqueue);
@@ -188,20 +166,7 @@ int sys_fork()
 }
 
 void sys_exit()
-{ /*
-  struct task_struct* current_proc = current();
-
-  pcbs_in_dir[get_DIR_pos(current_proc)]--;
-
-  if (pcbs_in_dir[get_DIR_pos(current_proc)] == 0) 
-  {
-    // Free user pages
-    free_user_pages(current_proc);
-  }
-  list_add_tail(&current_proc->list, &freequeue);
-
-  sched_next_rr();
-	*/	
+{ 
   struct task_struct *pcb = current();
   struct task_struct *pcb_parent = pcb->parent;	
 
@@ -265,7 +230,6 @@ int sys_unblock(int pid)
     struct task_struct *pcb_child = list_head_to_task_struct(it);	
     if (pcb_child->PID == pid) 
     {
-      //if (list_first(&(pcb_child->list)) == list_first(&blocked)) 
       if (is_blocked(pcb_child))
       {
         //desbloquearlo
@@ -281,7 +245,6 @@ int sys_unblock(int pid)
       }
     }
   }
-    //ESTO TIENE QUE SER -1 !!!!
    return -1;
 }
 
@@ -303,15 +266,11 @@ int sys_read(char *b, int maxchars)
     update_process_state_rr(t, &readblocked);
     sched_next_rr();   
   } 
-  // poner proceso en blocked prk scheduler no el psoi
-  //update_process_state_rr(t, &readblocked);
     
   int diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
   char buff[TAM_BUF];
   while (t->circ_buff_chars_to_read > 0) 
   {
-    //sched_next_rr();
-
     int i = 0;
     char c = circ_buff_read();
 
@@ -325,7 +284,7 @@ int sys_read(char *b, int maxchars)
     copy_to_user(buff, b + diff, i);
     diff = t->circ_buff_maxchars - t->circ_buff_chars_to_read;
     if (t->circ_buff_chars_to_read > 0)  {
-    //comprovar que esta a la llista de blokcedrd
+    //comprovar que esta a la llista de blocked
         if (is_blocked_rd(t) == 0) {
             list_add(&t->list, list_first(&readblocked));
         }
@@ -456,7 +415,6 @@ int sys_mutex_lock(int *m)
  
   if (mutex->count < 0) 
   {   
-	  printk("\n mutex lock - blokeo"); 
     update_process_state_rr(current(), &mutex->blocked_queue);
     sched_next_rr();
   }
@@ -466,7 +424,6 @@ int sys_mutex_lock(int *m)
 
 int sys_mutex_unlock(int *m) 
 { 
-     //  printk("                entro unblock");	
   if (!access_ok(VERIFY_WRITE, m, sizeof(int)) || !access_ok(VERIFY_READ, m, sizeof(int)))
     return -EFAULT;
   
@@ -481,13 +438,9 @@ int sys_mutex_unlock(int *m)
  
   if (mutex->count <= 0) 
   {
-	  printk("\n mutex unlock - desblokeo");
     struct task_struct *t = list_head_to_task_struct(list_first(&(mutex->blocked_queue)));
     list_del(&t->list);
     list_add_tail(&t->list, &readyqueue);
-
-   // sched_next_rr();
-
   }
 
   return 0;

@@ -136,21 +136,10 @@ void keyboardService ()
   if (t->circ_buff_chars_to_read > 0) 
   {
      if (t->circ_buff_maxchars == t->circ_buff_chars_to_read) {
-     //list_add_tail(current(), &readyqueue);
      update_process_state_rr(current(), &readyqueue);
      }
 
-     //t->circ_buff_chars_to_read--;
-
-    // mirar si buffer lleno
-    //if (t->circ_buff_chars_to_read == 0) 
-    /*{
-      return 0;
-    }*/
-
-    //list_add(t, &readyqueue); //FALTA POSAR AL PRNCIPI
-      //sched_next_rr();
-	task_switch((union task_union *)t);
+     	task_switch((union task_union *)t);
   } 
 } 
 
