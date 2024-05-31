@@ -42,8 +42,9 @@ int sys_write(int fd, char * buffer, int size)
 
   if (size <= 0) return -EINVAL; /* Invalid argument -22 */
   
+    char buff;
   // Print char by char so the stacj does not fill
-  for (int i = 0; i < size; ++i)
+  /*for (int i = 0; i < size; ++i)
   {
     // Initialize the char that we are going to write
     char buff;
@@ -54,8 +55,11 @@ int sys_write(int fd, char * buffer, int size)
 
     // Write the 1 char coppied
     sys_write_console(&buff, sizeof(buff));
-  }
-
+  }*/
+    error = copy_from_user(buffer, &buff, size);
+    if (error < 0) return error;
+  
+    sys_write_console(&buff, size);
   return 0; /* No error */
 }
 

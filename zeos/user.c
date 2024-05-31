@@ -44,49 +44,12 @@ int __attribute__ ((__section__(".text.main")))
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
-    char c[4];
-    int err = read(c, 2);
-    
-    char *buff = "\0\0\0\0\0\0";
-    itoa(err, buff);
-    print(buff);
-    
-    print(c);
-    print("\n");
+  char *fufu = "\[20;20fhola";
+  write(1, fufu, strlen(fufu));
+  char *ff = "\[1mpenis";
 
-  /* Funcio addAsm suma en assembly */
-  //int x = addAsm(0x42, 0x666);  
-  create_thread((void*)func, 0);
- 
-  //Test de la syscall fork feta amb sysenter 
-  
-  
-  int pid = fork();
-  if (pid == 0)
-  { 
-    block();
-    
-    char *bufferC = "\0\0\0\0\0";
-    print("\nCHILD Getpid: ");
-    itoa(getpid(), bufferC);
-    print(bufferC);
-  }
-  else if(pid > 0)
-  {  
-    char *bufferP = "\0\0\0\0\0";
-    print("\nPARENT Getpid: ");
-    itoa(getpid(), bufferP);
-    print(bufferP);
+  write(1, ff, strlen(ff));
 
-    char *buff = "\0\0\0\0\0\0";
-    read(buff, 4);
-    print("\n"); print(buff);
-
-    unblock(pid);  
-  }
-  
-  /* Funcio que provoca un page fault exception */
-  //pf(); 
-
-  while(1) { }
+//    print("\[31,43mhola");
+    while(1) { }
 }

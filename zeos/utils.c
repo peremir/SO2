@@ -130,3 +130,11 @@ unsigned long get_ticks(void) {
 
         return ticks;
 }
+
+char is_number(char c) {
+    return (c >= '0' && c <= '9');
+}
+
+char is_letter(char c) {
+    return ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'));
+}

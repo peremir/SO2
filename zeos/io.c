@@ -3,12 +3,12 @@
  */
 
 #include <io.h>
-
 #include <types.h>
 
 /**************/
 /** Screen  ***/
 /**************/
+
 
 #define NUM_COLUMNS 80
 #define NUM_ROWS    25
@@ -115,7 +115,7 @@ void printc(char c)
 }
 
 //OPTIONAL Modified printc color to print foreground in a different color
-void printc_color(char c, int mask)
+void printc_color(char c, Byte foreground_color, Byte background_color, Byte blink)
 {
      __asm__ __volatile__ ( "movb %0, %%al; outb $0xe9" ::"a"(c)); 
      /* Magic BOCHS debug: writes 'c' to port 0xe9 */
@@ -133,7 +133,8 @@ void printc_color(char c, int mask)
   }
   else
   {
-    Word ch = (Word) (c & 0x00FF) | mask;
+    Byte mask = ((blink ? 1 : 0) << 7) | ((background_color & 0x7) << 4) | (foreground_color & 0xF);
+    Word ch = (Word) (c & 0x00FF) | mask << 8;
     Word *screen = (Word *)0xb8000;
     screen[(y * NUM_COLUMNS + x)] = ch;
     if (++x >= NUM_COLUMNS)
@@ -172,14 +173,14 @@ void printk(char *string)
 }
 
 //Modified printk function to call printc_color()
-void printk_color(char *string, int mask)
+void printk_color(char *string, Byte foreground_color, Byte background_color, Byte blink)
 {
   int i;
   for (i = 0; string[i]; i++)
-    printc_color(string[i], mask);
+    printc_color(string[i], foreground_color, background_color, blink);
 }
 
-void erase_current_char() {
+void delete_current_char() {
     Word ch = (Word) ('\0' & 0x00FF) | 0x0200;
     if (--x < 0) {
         x = NUM_COLUMNS - 1;

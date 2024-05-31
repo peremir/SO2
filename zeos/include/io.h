@@ -24,10 +24,9 @@
 #define YELLOW          0x0E
 #define WHITE           0x0F
 
-extern const Byte DEFAULT_BG_COLOR;
-extern const Byte DEFAULT_FG_COLOR;
-extern const Byte DEFAULT_BLINK;
-extern const Byte DEFAULT_BRIGHT;
+//const Byte DEFAULT_BG_COLOR = BLACK;
+//const Byte DEFAULT_FG_COLOR = GREEN;
+//const Byte DEFAULT_BLINK = 0;
 
 /** Screen functions **/
 /**********************/
@@ -36,8 +35,9 @@ Byte inb (unsigned short port);
 void printc(char c);
 void printc_xy(Byte x, Byte y, char c);
 void printk(char *string);
-void printc_color(char c, int mask);
-void printk_color(char *string, int mask);
+void printc_color(char c, Byte foreground_color, Byte background_color, Byte blink);
+void printk_color(char *string, Byte foreground_color, Byte background_color, Byte blink);
+
 
 void change_pointer(Byte a, Byte b);
 void scroll();
