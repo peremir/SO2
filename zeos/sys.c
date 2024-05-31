@@ -435,7 +435,7 @@ int sys_mutex_init(int *m)
   if (mutex == NULL) 
     return -1;
 
-  mutex->count = 0;
+  mutex->count = 1;
 
   return 0;
 }
@@ -449,24 +449,24 @@ int sys_mutex_lock(int *m)
   copy_from_user(m, &m_sys, sizeof(int));
   
   struct mutex_t *mutex = mutex_get(m_sys);
-  if (mutex == NULL || mutex->count == -1) 
+  if (mutex == NULL) 
     return -1;
+
+  mutex->count--;
  
-  mutex->count++;
- 
-  if (mutex->count > 0) 
+  if (mutex->count < 0) 
   {   
 	 printk("\n mutex lock - blokeo"); 
     update_process_state_rr(current(), &mutex->blocked_queue);
     sched_next_rr();
   }
- 
+  
   return 0;
 }
 
 int sys_mutex_unlock(int *m) 
 { 
-       printk("\entro unblock");	
+       printk("                entro unblock");	
   if (!access_ok(VERIFY_WRITE, m, sizeof(int)) || !access_ok(VERIFY_READ, m, sizeof(int)))
     return -EFAULT;
   
@@ -474,15 +474,12 @@ int sys_mutex_unlock(int *m)
   copy_from_user(m, &m_sys, sizeof(int));
   
   struct mutex_t *mutex = mutex_get(m_sys);
-  if (mutex == NULL || mutex->count == -1) 
+  if (mutex == NULL) 
     return -1;
-  
-  if (mutex->count == 0) 
-    return 0;
    
-  mutex->count--;
+  mutex->count++;
  
-  if (mutex->count > 0) 
+  if (mutex->count < 1) 
   {
 	  printk("\n mutex unlock - desblokeo");
     struct task_struct *t = list_head_to_task_struct(list_first(&mutex->blocked_queue));
