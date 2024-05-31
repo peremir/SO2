@@ -5,7 +5,7 @@
 #define LEFT 3
 #define RIGHT 4
 
-#define PLAYER_CHAR 'a'
+#define PLAYER_CHAR 'A'
 
 
 
@@ -71,17 +71,17 @@ void keyboardRead(struct game *game)
       mutex_unlock(&game->mutex);
     }
     else if (c[0] == 's')  {
-      //CHANGE PLAYER RIGHT
-      mutex_lock(&game->mutex);
-      g_erase_xy(game->player.x, game->player.y);
-      game->player.x++;
-      mutex_unlock(&game->mutex);
-    }
-    else if (c[0] == 'd')  {
-     //CHANGE PLAYER DOWN
+      //CHANGE PLAYER DOWN
       mutex_lock(&game->mutex);
       g_erase_xy(game->player.x, game->player.y);
       game->player.y++;
+      mutex_unlock(&game->mutex);
+    }
+    else if (c[0] == 'd')  {
+     //CHANGE PLAYER RIGHT
+      mutex_lock(&game->mutex);
+      g_erase_xy(game->player.x, game->player.y);
+      game->player.x++;
       mutex_unlock(&game->mutex);
     }
   }
@@ -93,15 +93,25 @@ void draw_player(struct game * game) {
   g_draw_xy(PLAYER_CHAR, game->player.x, game->player.y, YELLOW, BLUE);
 }
 
+/*
+void draw_enemies(struct game * game) {
+  for (int i = 0; i < game->MAX_ENEMIES; ++i) {
+        if (game->manzanitas[i].x >= 0 && game->manzanitas[i].y >= 0) {
+            g_draw_xy(MANZANITA_CHAR, game->manzanitas[i].x+MAP_X_OFFSET, game->manzanitas[i].y+MAP_Y_OFFSET, RED, BLACK);
+        }
+    }
+}*/
+
 
 void gameStep(struct game *game)
 {
   //DIBUIXAR PLAYER AND ENEMIES
   
-  if(game->steps == 9) 
+  if(game->steps == 1) 
   {
     game->steps = 0;
     //FUNC PRINT PLAYER
+    draw_player(game);
   }
   else game->steps++;
 
@@ -143,8 +153,8 @@ void gameStart()
   
   while(!game->end_game) {   
     //CALCULATE AND EXECUTE A GAME STEP
-    if(gettime()%300 == 0) {
-      int time = gettime();
+    if(gettime()%20 == 0) {
+      long long time = gettime();
       while(gettime() == time);
 
       create_thread((void*)gameStep, game);
