@@ -429,10 +429,13 @@ int sys_mutex_init(int *m)
 
   int m_sys = 0;
   copy_from_user(m, &m_sys, sizeof(int));
-
+  
+  
   struct mutex_t *mutex = mutex_get(m_sys);
   if (mutex == NULL) 
     return -1;
+
+  INIT_LIST_HEAD(&mutex->blocked_queue);
 
   mutex->count = 0;
 

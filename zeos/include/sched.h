@@ -26,7 +26,6 @@ struct task_struct {
   struct task_struct *parent;
   int circ_buff_chars_to_read;
   int circ_buff_maxchars;
-
 };
 
 union task_union {

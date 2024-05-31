@@ -5,11 +5,13 @@
 #include <sched.h>
 #include <mm.h>
 #include <io.h>
+#include <devices.h>
 
 struct list_head  freequeue;
 struct list_head readyqueue;
 extern struct list_head blocked;
 extern struct list_head readblocked;
+
 
 struct task_struct * idle_task;
 extern int quantum_left;
@@ -27,8 +29,6 @@ struct task_struct *list_head_to_task_struct(struct list_head *l)
 
 int pids;
 int pending_unblocks;
-extern int quantum_left;
-
 
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 
@@ -167,8 +167,10 @@ int needs_sched_rr(void)
   if ((quantum_left <= 0) && (!list_empty(&readyqueue))) 
    return 1;
   
-  if (quantum_left <= 0) quantum_left = get_quantum(current());
-   return 0;
+  if (quantum_left <= 0) { 
+    quantum_left = get_quantum(current());
+   
+  return 0;}
 }
 
 
@@ -216,10 +218,14 @@ void schedule()
 
 struct mutex_t mutexes[MAX_MUTEXES];
 
-struct mutex_t* mutex_get(int id) {
-    if (id < 0) return NULL;
-    if (id >= MAX_MUTEXES) return NULL;
+struct mutex_t* mutex_get(int id) 
+{
+  if (id < 0) 
+    return NULL;
+    
+  if (id >= MAX_MUTEXES) 
+    return NULL;
 
-    return &mutexes[id];
+  return &mutexes[id];
 }
 
