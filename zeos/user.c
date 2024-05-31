@@ -28,6 +28,7 @@ struct game {
     int mutex;
     struct object player;
     struct object enemies[MAX_ENEMIES];
+    int steps;
 };
 
 void keyboardRead(struct game *game)
@@ -54,10 +55,19 @@ void keyboardRead(struct game *game)
   exit_thread();
 }
 
-void gameStep(int id)
+void gameStep(struct game *game)
 {
   print("\ngameStep");
   //DIBUIXAR PLAYER AND ENEMIES
+  
+  if(game->steps == 9) 
+  {
+    game->steps = 0;
+    //FUNC PRINT PLAYER
+  }
+  else game->steps++;
+
+  //FUNC PRINT ENEMIES
 
   exit_thread();
 }
@@ -85,13 +95,15 @@ void gameStart()
   game->mutex = 0;
   mutex_init(&game->mutex);
 
+  game->steps = 0;   //CADA 1 STEP DRAW PLAYER i CADA 10 STEP ENEMIES
+
   //RUNNING GAME ALREADY
   create_thread((void*)keyboardRead, game);
   
   while(!game->end_game) {   
     
     //CALCULATE AND EXECUTE A GAME STEP
-    if(gettime()%50 == 0) {
+    if(gettime()%300 == 0) {
       int time = gettime();
       while(gettime() == time);
 
