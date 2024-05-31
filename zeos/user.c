@@ -1,17 +1,4 @@
 
-char buff[24];
-
-int pid;
-int mutex = 0;
-
-int counter = 0;
-int zaza = 0;
-
-int addAsm(int par1, int par2);
-int write(int fd, char * buffer, int size);
-unsigned int gettime();
-int getpid();
-
 void print(char *buffer)
 {
   write(1, buffer, strlen(buffer));
@@ -24,32 +11,88 @@ void printNum(int num)
   print(numBuff);
 }
 
-void func(int id)
+// GAME FUNCTIONALITY //
+
+#define MAX_ENEMIES 10
+
+struct object {
+  int x;
+  int y;
+};
+
+struct game {
+    int score;
+    int lives;
+    int end_game;
+    int mutex;
+    struct object player;
+    struct object enemies[MAX_ENEMIES];
+};
+
+void keyboardRead(struct game *game)
 {
+  char c[2];
+
+  while(!game->end_game) {
+    
+    read(&c, 1);
  
-   mutex_lock(&mutex); 
-   for (int i = 0; i < 5; i++) {
-              // Sección crítica
-        //while (gettime()<(500*(5-id))){}
-        for(int j = 0; j < 1000000; j++) {
-          zaza = 1+id; 
-        }
-
-        counter++;
-        print("\nThread ");
-        printNum(id);
-        print(" incremented counter to ");
-        printNum(counter);
+    // WASD
+    if (c[0] == 'w') print("\n player up");
+      //CHANGE PLAYER UP
+      
+    else if (c[0] == 'a') print("\n player left");
+      //CHANGE PLAYER LEFT
         
-   }
-     
-    print("\n zaza: ");
-    printNum(zaza);
-    print("\n");
-	  mutex_unlock(&mutex);       
+    else if (c[0] == 's') print("\n player down");
+      //CHANGE PLAYER RIGHT
 
-    exit_thread();
+    else if (c[0] == 'd') print("\n player right");
+     //CHANGE PLAYER DOWN 
+    }
+  exit_thread();
 }
+
+void gameStep(int id)
+{
+
+
+  exit_thread();
+}
+
+void gameStart()
+{
+  struct game* game = (struct game*)dyn_mem(sizeof(struct game));
+
+  //INIT GAME DATA
+  game->score = 0;
+  game->lives = 3;
+  game->end_game = 0;   //0 is no, 1 is yes(end game)
+  
+  //INIT OBJECTS
+  game->player.x = 20;
+  game->player.y = 20;
+
+  for(int i = 0; i < MAX_ENEMIES; ++i) 
+  {
+    game->enemies[i].x = 10+i;
+    game->enemies[i].y = 20;
+  }
+
+  //INIT GAME SYNC MUTEX
+  game->mutex = 0;
+  mutex_init(&game->mutex);
+
+  
+  
+  //RUNNING GAME ALREADY
+  create_thread((void*)keyboardRead, game);
+  
+  while(!game->end_game) {
+    //print("\n game running");
+  }
+}
+
 
 
 int __attribute__ ((__section__(".text.main")))
@@ -60,33 +103,7 @@ int __attribute__ ((__section__(".text.main")))
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
- 
-       	mutex_init(&mutex);
-
-    for (int i = 0; i < 3; i++) {
-        
-       create_thread((void*)func, i);
-    }
-
-/* 
-El Output hauria de ser aixi, primer thread 0, dps 1, dps 2
- 
-Thread 0 incremented counter to 1
-Thread 0 incremented counter to 2
-Thread 0 incremented counter to 3
-Thread 0 incremented counter to 4
-Thread 0 incremented counter to 5
-Thread 1 incremented counter to 6
-Thread 1 incremented counter to 7
-Thread 1 incremented counter to 8
-Thread 1 incremented counter to 9
-Thread 1 incremented counter to 10
-Thread 2 incremented counter to 11
-Thread 2 incremented counter to 12
-Thread 2 incremented counter to 13
-Thread 2 incremented counter to 14
-Thread 2 incremented counter to 15
-*/
+  gameStart();
 
   while(1) { }
 }
