@@ -132,8 +132,9 @@ void set_attribute(int a) {
             blink = default_blink;
             break;
         case 1: // Reverse
-            fg_color = default_bg_color;
-            bg_color = default_fg_color;
+            short temp = fg_color;
+            fg_color = bg_color;
+            bg_color = temp;
             break;
         case 5: //blink
             blink = !blink;
