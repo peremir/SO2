@@ -5,7 +5,7 @@
 #define LEFT 3
 #define RIGHT 4
 
-
+#define PLAYER_CHAR 'a'
 
 
 
@@ -55,41 +55,46 @@ void keyboardRead(struct game *game)
     read(&c, 1);
  
     // WASD
-    if (c[0] == 'w') print("\n player up") {
+    if (c[0] == 'w')  {
       //CHANGE PLAYER UP
       mutex_lock(&game->mutex);
       g_erase_xy(game->player.x, game->player.y);
       game->player.y--;
       mutex_unlock(&game->mutex);
     }
-    else if (c[0] == 'a') print("\n player left") {
+    else if (c[0] == 'a')  {
       //CHANGE PLAYER LEFT
       mutex_lock(&game->mutex);
       g_erase_xy(game->player.x, game->player.y);
       game->player.x--;
       mutex_unlock(&game->mutex);
     }
-    else if (c[0] == 's') print("\n player down") {
+    else if (c[0] == 's')  {
       //CHANGE PLAYER RIGHT
-      mutex_lock(&game->mutex);
-      g_erase_xy(game->player.x+, game->player.y);
-      game->player.x++;
-      mutex_unlock(&game->mutex);
-    }
-    else if (c[0] == 'd') print("\n player right") {
-     //CHANGE PLAYER DOWN
       mutex_lock(&game->mutex);
       g_erase_xy(game->player.x, game->player.y);
       game->player.x++;
+      mutex_unlock(&game->mutex);
+    }
+    else if (c[0] == 'd')  {
+     //CHANGE PLAYER DOWN
+      mutex_lock(&game->mutex);
+      g_erase_xy(game->player.x, game->player.y);
+      game->player.y++;
       mutex_unlock(&game->mutex);
     }
   }
   exit_thread();
 }
 
+
+void draw_player(struct game * game) {
+  g_draw_xy(PLAYER_CHAR, game->player.x, game->player.y, YELLOW, BLUE);
+}
+
+
 void gameStep(int id)
 {
-  print("\ngameStep");
   //DIBUIXAR PLAYER AND ENEMIES
 
   exit_thread();
@@ -110,8 +115,7 @@ void gameStart()
   //INIT OBJECTS
   game->player.x = 20;
   game->player.y = 20;
-  g_draw_xy('A',10,10,YELLOW, BLUE);
-
+  draw_player(game);
   for(int i = 0; i < MAX_ENEMIES; ++i) 
   {
     game->enemies[i].x = 10+i;
@@ -126,7 +130,6 @@ void gameStart()
   create_thread((void*)keyboardRead, game);
   
   while(!game->end_game) {   
-    
     //CALCULATE AND EXECUTE A GAME STEP
     if(gettime()%50 == 0) {
       int time = gettime();
