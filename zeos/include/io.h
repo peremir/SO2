@@ -24,9 +24,6 @@
 #define YELLOW          0x0E
 #define WHITE           0x0F
 
-//const Byte DEFAULT_BG_COLOR = BLACK;
-//const Byte DEFAULT_FG_COLOR = GREEN;
-//const Byte DEFAULT_BLINK = 0;
 
 /** Screen functions **/
 /**********************/

@@ -116,7 +116,6 @@ void inner_task_switch(union task_union *new)
   set_cr3(get_DIR((struct task_struct*)new));
   current()->kernel_esp = get_ebp();
   set_esp(new->task.kernel_esp);
-  //quantum_left=current()->quantum;
 }
 
 void init_sched()
@@ -198,7 +197,6 @@ void sched_next_rr (void)
   else 
   {
     ready = list_first(&readyqueue);
-    //list_del(ready);
     
     next_task = list_head_to_task_struct(ready);
   }
