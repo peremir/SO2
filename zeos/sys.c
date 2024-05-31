@@ -24,6 +24,7 @@ extern unsigned int zeos_ticks;
 int quantum_left;
 
 
+char buff[4096];
 int check_fd(int fd, int permissions)
 {
   if (fd!=1) return -EBADF; /* Bad file number -9 */
@@ -42,7 +43,6 @@ int sys_write(int fd, char * buffer, int size)
 
   if (size <= 0) return -EINVAL; /* Invalid argument -22 */
   
-    char buff;
   // Print char by char so the stacj does not fill
   /*for (int i = 0; i < size; ++i)
   {

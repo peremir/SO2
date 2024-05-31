@@ -40,15 +40,15 @@ int __attribute__ ((__section__(".text.main")))
   /* This register is a privileged one, and so it will raise an exception */
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
- create_thread((void*)func, 0);
+  create_thread((void*)func, 0);
  
-  char *fufu = "\[20;20fhola";
+  char *fufu = "\[20;10fhola";
   write(1, fufu, strlen(fufu));
   char *ff = "\[1mma\[Kma";
 
   write(1, ff, strlen(ff));
 
-//    print("\[31,43mhola");
+  print("\[31;43;5mhola");
   
   
   while(1) { }
