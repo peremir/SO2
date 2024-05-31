@@ -424,7 +424,6 @@ void sys_exit_thread(void)
 
 int sys_mutex_init(int *m) 
 {
-	printk("\n entro mutex init");
   if (!access_ok(VERIFY_READ, m, sizeof(int)))
     return -EFAULT;
 
@@ -435,8 +434,6 @@ int sys_mutex_init(int *m)
   struct mutex_t *mutex = mutex_get(m_sys);
   if (mutex == NULL) 
     return -1;
-
-  //INIT_LIST_HEAD(&mutex->blocked_queue);
 
   mutex->count = 0;
 
@@ -454,19 +451,22 @@ int sys_mutex_lock(int *m)
   struct mutex_t *mutex = mutex_get(m_sys);
   if (mutex == NULL || mutex->count == -1) 
     return -1;
-  
-  if (mutex->count >= 1) 
-  {    
+ 
+  mutex->count++;
+ 
+  if (mutex->count > 0) 
+  {   
+	 printk("\n mutex lock - blokeo"); 
     update_process_state_rr(current(), &mutex->blocked_queue);
     sched_next_rr();
   }
-  mutex->count++;
-
+ 
   return 0;
 }
 
 int sys_mutex_unlock(int *m) 
-{  
+{ 
+       printk("\entro unblock");	
   if (!access_ok(VERIFY_WRITE, m, sizeof(int)) || !access_ok(VERIFY_READ, m, sizeof(int)))
     return -EFAULT;
   
@@ -479,14 +479,19 @@ int sys_mutex_unlock(int *m)
   
   if (mutex->count == 0) 
     return 0;
-  
-  if (!list_empty(&mutex->blocked_queue)) 
+   
+  mutex->count--;
+ 
+  if (mutex->count > 0) 
   {
+	  printk("\n mutex unlock - desblokeo");
     struct task_struct *t = list_head_to_task_struct(list_first(&mutex->blocked_queue));
     list_del(&t->list);
-    list_add(&t->list, &readyqueue);
+    list_add_tail(&t->list, &readyqueue);
+
+    sched_next_rr();
+
   }
-  mutex->count--;
 
   return 0;
 }

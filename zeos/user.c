@@ -2,7 +2,10 @@
 char buff[24];
 
 int pid;
-int mutex = 5;
+int mutex1 = 0;
+int mutex2 = 1;
+int mutex3 = 2;
+
 int counter = 0;
 
 int addAsm(int par1, int par2);
@@ -22,17 +25,12 @@ void printNum(int num)
   print(numBuff);
 }
 
-void printl()
-{
- print("\n");
-}
-
 void func(int id)
 {
-         
+ 
    for (int i = 0; i < 5; i++) {
-       mutex_lock(&mutex); 
-        // Sección crítica
+        mutex_lock(&id); 
+              // Sección crítica
         int temp = counter;
         temp++;
         counter = temp;
@@ -41,8 +39,10 @@ void func(int id)
         printNum(id);
         print(" incremented counter to ");
         printNum(counter);
- mutex_unlock(&mutex);       
-            }
+
+	mutex_unlock(&id);       
+
+   }
 
 
     exit_thread();
@@ -57,10 +57,14 @@ int __attribute__ ((__section__(".text.main")))
   
   /* __asm__ __volatile__ ("mov %0, %%cr3"::"r" (0) ); */
 
-  mutex_init(&mutex);
+ 
+       	mutex_init(&mutex2);
+		mutex_init(&mutex3);
+	mutex_init(&mutex1);
 
     for (int i = 0; i < 3; i++) {
-        create_thread((void*)func, i);
+        
+       create_thread((void*)func, i);
     }
 
 /* 
