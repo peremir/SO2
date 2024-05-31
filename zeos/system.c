@@ -85,14 +85,14 @@ int __attribute__((__section__(".text.main")))
         "                         "
   }; 
   
-  
+ /* 
   for (int i = 0; i < sizeof(ascii_art) / sizeof(ascii_art[0]); i++)
   {
         printk(ascii_art[i]);
         printk("\n");
   }
   printk("Kernel Loaded!    ");
-
+*/
   /* Initialize hardware data */
   setGdt(); /* Definicio de la taula de segments de memoria */
   setIdt(); /* Definicio del vector de interrupcions */
@@ -115,7 +115,7 @@ int __attribute__((__section__(".text.main")))
   /* Move user code/data now (after the page table initialization) */
   copy_data((void *) KERNEL_START + *p_sys_size, (void*)L_USER_START, *p_usr_size);
 
-  printk_color("Pere i Pol - Kernel modified :D ", GREEN, BLACK, 0);
+  //printk_color("Pere i Pol - Kernel modified :D ", GREEN, BLACK, 0);
 
   enable_int();
   /*

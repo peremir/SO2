@@ -107,16 +107,25 @@ void gameStep(struct game *game)
 {
   //DIBUIXAR PLAYER AND ENEMIES
   
-  if(game->steps == 1) 
-  {
-    game->steps = 0;
-    //FUNC PRINT PLAYER
-    draw_player(game);
-  }
-  else game->steps++;
+  while(!game->end_game) {   
+    //CALCULATE AND EXECUTE A GAME STEP
+    draw_player(game); 
+    if(gettime()%100 == 0) {
+      
+      long long time = gettime();
+      while(gettime() == time);
 
-  //FUNC PRINT ENEMIES
+      //VA LENT i MALAMENT PRK HEM DE TENIM DOS THREADS PER CADA
+      // SI ESTIGUES AL JUST FER READ, GOD
 
+      if(game->steps == 5) 
+      {
+	game->steps = 0;
+        //FUNC PRINT ENEMIES
+      }
+      else game->steps++;
+      }
+    }
   exit_thread();
 }
 
@@ -133,8 +142,8 @@ void gameStart()
   game->end_game = 0;   //0 is no, 1 is yes(end game)
   
   //INIT OBJECTS
-  game->player.x = 20;
-  game->player.y = 20;
+  game->player.x = 39;
+  game->player.y = 22;
   draw_player(game);
   for(int i = 0; i < MAX_ENEMIES; ++i) 
   {
@@ -150,19 +159,10 @@ void gameStart()
 
   //RUNNING GAME ALREADY
   create_thread((void*)keyboardRead, game);
-  
-  while(!game->end_game) {   
-    //CALCULATE AND EXECUTE A GAME STEP
-    if(gettime()%20 == 0) {
-      long long time = gettime();
-      while(gettime() == time);
+ 
+create_thread((void*)gameStep, game);
 
-      create_thread((void*)gameStep, game);
-    }
-  
-  //MORE GAME DATA
-  }
-}
+ }
 
 
 
@@ -171,8 +171,6 @@ int __attribute__ ((__section__(".text.main")))
 {
 
   gameStart();
-
-  g_fill_screen('E',RED,YELLOW);
   
   while(1) { }
 }
