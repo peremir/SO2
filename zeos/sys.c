@@ -369,8 +369,8 @@ int sys_create_thread(void (*start_routine)(void* arg), void *parameter)
   DWord *base_stack = &(pcb_union->stack[KERNEL_STACK_SIZE]);
  
   //Primer i segon DWord size param 
-  base_stack[-1] = (DWord)parameter;
-  base_stack[-2] = (DWord)0; 
+  new_stack[(PAGE_SIZE/4)-1] = (DWord)parameter;
+  new_stack[(PAGE_SIZE/4)-2] = (DWord)0; 
 
   int register_ebp;             /* frame pointer */
   /* Map Parent's ebp to child's stack */
@@ -424,6 +424,7 @@ void sys_exit_thread(void)
 
 int sys_mutex_init(int *m) 
 {
+	printk("\n entro mutex init");
   if (!access_ok(VERIFY_READ, m, sizeof(int)))
     return -EFAULT;
 
@@ -435,7 +436,7 @@ int sys_mutex_init(int *m)
   if (mutex == NULL) 
     return -1;
 
-  INIT_LIST_HEAD(&mutex->blocked_queue);
+  //INIT_LIST_HEAD(&mutex->blocked_queue);
 
   mutex->count = 0;
 
@@ -443,19 +444,19 @@ int sys_mutex_init(int *m)
 }
 
 int sys_mutex_lock(int *m) 
-{
+{ 
   if (!access_ok(VERIFY_WRITE, m, sizeof(int)) || !access_ok(VERIFY_READ, m, sizeof(int))) 
     return -EFAULT;
-
+  
   int m_sys;
   copy_from_user(m, &m_sys, sizeof(int));
-
+  
   struct mutex_t *mutex = mutex_get(m_sys);
   if (mutex == NULL || mutex->count == -1) 
     return -1;
-
+  
   if (mutex->count >= 1) 
-  {     
+  {    
     update_process_state_rr(current(), &mutex->blocked_queue);
     sched_next_rr();
   }
@@ -465,20 +466,20 @@ int sys_mutex_lock(int *m)
 }
 
 int sys_mutex_unlock(int *m) 
-{
+{  
   if (!access_ok(VERIFY_WRITE, m, sizeof(int)) || !access_ok(VERIFY_READ, m, sizeof(int)))
     return -EFAULT;
-
+  
   int m_sys;
   copy_from_user(m, &m_sys, sizeof(int));
-
+  
   struct mutex_t *mutex = mutex_get(m_sys);
   if (mutex == NULL || mutex->count == -1) 
     return -1;
-
+  
   if (mutex->count == 0) 
     return 0;
-
+  
   if (!list_empty(&mutex->blocked_queue)) 
   {
     struct task_struct *t = list_head_to_task_struct(list_first(&mutex->blocked_queue));

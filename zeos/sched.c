@@ -128,6 +128,10 @@ void init_sched()
   INIT_LIST_HEAD(&readyqueue);
   INIT_LIST_HEAD(&blocked);
   INIT_LIST_HEAD(&readblocked);
+  
+  for (int i = 0; i < MAX_MUTEXES; ++i) {
+        INIT_LIST_HEAD( &mutexes[i].blocked_queue );
+    }
 
   for (int i = 0; i < NR_TASKS; i++) 
   {

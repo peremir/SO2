@@ -2,7 +2,7 @@
 char buff[24];
 
 int pid;
-int mutex = 10;
+int mutex = 5;
 int counter = 0;
 
 int addAsm(int par1, int par2);
@@ -27,23 +27,23 @@ void printl()
  print("\n");
 }
 
-void func(int i)
+void func(int id)
 {
-      for (int i = 0; i < 5; i++) {
-        mutex_lock(&mutex);
-        
+         
+   for (int i = 0; i < 5; i++) {
+       mutex_lock(&mutex); 
         // Sección crítica
         int temp = counter;
         temp++;
         counter = temp;
         
         print("\nThread ");
-        printNum(i);
+        printNum(id);
         print(" incremented counter to ");
         printNum(counter);
-        
-        mutex_unlock(&mutex);
-    }
+ mutex_unlock(&mutex);       
+            }
+
 
     exit_thread();
 }
