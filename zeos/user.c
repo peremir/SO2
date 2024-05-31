@@ -5,6 +5,7 @@ int pid;
 int mutex = 0;
 
 int counter = 0;
+int zaza = 0;
 
 int addAsm(int par1, int par2);
 int write(int fd, char * buffer, int size);
@@ -26,22 +27,26 @@ void printNum(int num)
 void func(int id)
 {
  
+   mutex_lock(&mutex); 
    for (int i = 0; i < 5; i++) {
-        mutex_lock(&mutex); 
               // Sección crítica
-        int temp = counter;
-        temp++;
-        counter = temp;
-        
+        //while (gettime()<(500*(5-id))){}
+        for(int j = 0; j < 1000000; j++) {
+          zaza = 1+id; 
+        }
+
+        counter++;
         print("\nThread ");
         printNum(id);
         print(" incremented counter to ");
         printNum(counter);
-
-	mutex_unlock(&mutex);       
-
+        
    }
-
+     
+    print("\n zaza: ");
+    printNum(zaza);
+    print("\n");
+	  mutex_unlock(&mutex);       
 
     exit_thread();
 }

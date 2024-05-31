@@ -456,7 +456,7 @@ int sys_mutex_lock(int *m)
  
   if (mutex->count < 0) 
   {   
-	 printk("\n mutex lock - blokeo"); 
+	  printk("\n mutex lock - blokeo"); 
     update_process_state_rr(current(), &mutex->blocked_queue);
     sched_next_rr();
   }
@@ -466,7 +466,7 @@ int sys_mutex_lock(int *m)
 
 int sys_mutex_unlock(int *m) 
 { 
-       printk("                entro unblock");	
+     //  printk("                entro unblock");	
   if (!access_ok(VERIFY_WRITE, m, sizeof(int)) || !access_ok(VERIFY_READ, m, sizeof(int)))
     return -EFAULT;
   
@@ -479,14 +479,14 @@ int sys_mutex_unlock(int *m)
    
   mutex->count++;
  
-  if (mutex->count < 1) 
+  if (mutex->count <= 0) 
   {
 	  printk("\n mutex unlock - desblokeo");
-    struct task_struct *t = list_head_to_task_struct(list_first(&mutex->blocked_queue));
+    struct task_struct *t = list_head_to_task_struct(list_first(&(mutex->blocked_queue)));
     list_del(&t->list);
     list_add_tail(&t->list, &readyqueue);
 
-    sched_next_rr();
+   // sched_next_rr();
 
   }
 
