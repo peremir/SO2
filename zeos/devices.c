@@ -87,11 +87,6 @@ int sys_write_console(char *buffer, int size) {
 
 int execute_command (char op, int *params, int n_params) {
   switch (op) {
-    // Scroll down screen
-  case 'D':
-    scroll();
-      break;
-
   // Erase character
   case 'K':
       delete_current_char();

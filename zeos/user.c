@@ -46,7 +46,7 @@ int __attribute__ ((__section__(".text.main")))
 
   char *fufu = "\[20;20fhola";
   write(1, fufu, strlen(fufu));
-  char *ff = "\[1mpenis";
+  char *ff = "\[1mma\[Kma";
 
   write(1, ff, strlen(ff));
 
